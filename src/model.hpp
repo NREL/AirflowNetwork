@@ -70,12 +70,33 @@ private:
           return false;
         }
 #endif
-        h[i] = std::max(h[i], i - j);
+        h[i] = std::max(h[i], j - i);
       }
     }
 
     // Get the skyline solver set up
-    //std::make_unique<skyline::SymmetricMatrix<I, double, std::vector>>()
+    skyline = std::make_unique<skyline::SymmetricMatrix<I, double, std::vector>>(h);
+
+#ifdef ORDERED_NODES
+    for (auto& el : links) {
+      I i = el.node0.index;
+      I j = el.node1.index;
+
+      // Only get the index for the 1 side of the link, and only if that node is simulatd.
+      // This is legit because the matrix is symmetric and we're only storing the upper
+      // triangular part.
+      if (el.node1.variable) {
+        auto index = skyline->index(i, j);
+        if (!index) {
+          errors.push_back("Link \"" + el.name + "\", node \"" + el.node1.name + "\" has an index outside the skyline");
+          return false;
+        }
+        el.index1 = index.value();
+      }
+    }
+#else
+
+#endif
 
     return true;
   }
