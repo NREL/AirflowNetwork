@@ -9,6 +9,7 @@
 #include "link.hpp"
 #include "powerlaw.hpp"
 #include "pugixml.hpp"
+#include "skyline.hpp"
 
 #define ORDERED_NODES
 
@@ -72,10 +73,9 @@ private:
         h[i] = std::max(h[i], i - j);
       }
     }
-    
-    // Set up the solution vector
 
     // Get the skyline solver set up
+    //std::make_unique<skyline::SymmetricMatrix<I, double, std::vector>>()
 
     return true;
   }
@@ -396,6 +396,8 @@ public:
   std::vector<std::string> warnings;
 
   std::vector<double> p;
+
+  std::unique_ptr<skyline::SymmetricMatrix<I, double, std::vector>> skyline;
 
 };
 
