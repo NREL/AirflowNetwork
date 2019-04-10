@@ -1,0 +1,409 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--xs:schema targetNamespace="http://tempuri.org/XMLSchema.xsd"
+    elementFormDefault="qualified"
+    attributeFormDefault="unqualified"
+    xmlns="http://tempuri.org/XMLSchema.xsd"
+    xmlns:mstns="http://tempuri.org/XMLSchema.xsd"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+-->
+<xs:schema targetNamespace="http://github.com/jasondegraw/AirflowNetwork"
+  elementFormDefault="qualified"
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  xmlns:afn="http://github.com/jasondegraw/AirflowNetwork"
+>
+  <xs:annotation>
+    <xs:documentation>AirflowNetwork Schema - Version 1.0 (March 31, 2019)</xs:documentation>
+  </xs:annotation>
+  <xs:element name="AirflowNetwork">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="Description" type="xs:string" minOccurs="0">
+          <xs:annotation>
+            <xs:documentation>Description of the model</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name="AirflowElements" minOccurs="0" maxOccurs="1">
+          <xs:annotation>
+            <xs:documentation>The set of all airflow elements used in the model</xs:documentation>
+          </xs:annotation>
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="PowerLaw" type="afn:PowerLawType" minOccurs="0" maxOccurs="unbounded"/>
+              <xs:element name="DetailedOpening" type="afn:ComisDetailedOpeningType" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="Nodes" minOccurs="0">
+          <xs:annotation>
+            <xs:documentation>The set of all nodes in the model</xs:documentation>
+          </xs:annotation>
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name ="Node" type="afn:NodeType" maxOccurs="unbounded"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="Links" minOccurs="0">
+          <xs:annotation>
+            <xs:documentation>The set of all links that connect nodes in the model</xs:documentation>
+          </xs:annotation>
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name ="Link" type="afn:LinkType" maxOccurs="unbounded"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:complexType name="PowerLawType">
+    <xs:sequence>
+      <xs:element name="Description" type="xs:string" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Description of the power law element</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Coefficient">
+        <xs:annotation>
+          <xs:documentation>Power law flow coefficient</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:double">
+            <xs:minExclusive value="0.0"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="LaminarCoefficient" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Power law flow coefficient for small pressure differences, defaults to the coefficient value</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:double">
+            <xs:minExclusive value="0.0"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="Exponent" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Power law flow exponent, defaults to 0.65</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:double">
+            <xs:minInclusive value="0.5"/>
+            <xs:maxInclusive value="1.0"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="ReferenceState" type="afn:AirStateType" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Reference state of the power law element</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Transition" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Specify how small pressure differences are to be handled, defaults to ByMaximum</xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+          <xs:choice>
+            <xs:element name="ByMinimum" type="xs:string" fixed="">
+              <xs:annotation>
+                <xs:documentation>Power law flow transition by minimum flow from laminar and turbulent calculations</xs:documentation>
+              </xs:annotation>
+            </xs:element>
+            <xs:element name="ReynoldsNumber">
+              <xs:annotation>
+                <xs:documentation>Power law flow transition Reynolds number</xs:documentation>
+              </xs:annotation>
+              <xs:simpleType>
+                <xs:restriction base="xs:double">
+                  <xs:minExclusive value="0.0"/>
+                </xs:restriction>
+              </xs:simpleType>
+            </xs:element>
+            <xs:element name="PressureDifference">
+              <xs:annotation>
+                <xs:documentation>Power law flow transition pressure difference</xs:documentation>
+              </xs:annotation>
+              <xs:simpleType>
+                <xs:restriction base="xs:double">
+                  <xs:minExclusive value="0.0"/>
+                </xs:restriction>
+              </xs:simpleType>
+            </xs:element>
+          </xs:choice>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute name="ID" type="xs:ID">
+      <xs:annotation>
+        <xs:documentation>Name of power law element, must be unique</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+  <xs:complexType name="ComisDetailedOpeningType">
+    <xs:sequence>
+      <xs:element name="Description" type="xs:string" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Description of the detailed opening element</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Coefficient">
+        <xs:annotation>
+          <xs:documentation>Flow coefficient when the opening is closed</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:double">
+            <xs:minExclusive value="0.0"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="Exponent" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Flow exponent when the opening is closed, defaults to 0.65</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:double">
+            <xs:minInclusive value="0.5"/>
+            <xs:maxInclusive value="1.0"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="OpeningType" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Type of opening, defaults to NonPivoted</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="NonPivoted"/>
+            <xs:enumeration value="HorizontallyPivoted"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="ExtraCrackLengthOrHeightOfPivotingAxis" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Extra crack length or the height of the pivoting axis [m], defaults to 0</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:double">
+            <xs:minExclusive value="0.0"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="OpeningFactors" type="afn:OpeningFactorsType" minOccurs="2" maxOccurs="4"/>
+    </xs:sequence>
+    <xs:attribute name="ID" type="xs:ID">
+      <xs:annotation>
+        <xs:documentation>Name of power law element, must be unique</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+  <xs:complexType name="AirStateType">
+    <xs:sequence>
+      <xs:element name="Description" type="xs:string" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Description of the air state</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Temperature">
+        <xs:annotation>
+          <xs:documentation>Temperature [K]</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:double">
+            <xs:minExclusive value="0.0"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="Pressure" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Pressure [Pa], defaults to 101325</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:double">
+            <xs:minExclusive value="0.0"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="HumidityRatio" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Humidity ratio [-], defaults to 0</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:double">
+            <xs:minInclusive value="0.0"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute name="ID" type="xs:ID">
+      <xs:annotation>
+        <xs:documentation>Name of air state, must be unique</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+  <xs:complexType name="OpeningFactorsType">
+    <xs:sequence>
+      <xs:element name="OpeningFraction">
+        <xs:annotation>
+          <xs:documentation>The fraction that the window or door is open</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:double">
+            <xs:minInclusive value="0.0"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="DischargeCoefficient" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>The fractional effectiveness for air flow through the opening at this opening factor, defaults to 0.001</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:double">
+            <xs:minExclusive value="0.0"/>
+            <xs:maxInclusive value="1.0"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="WidthFactor" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>The opening width divided by the window or door width, defaults to 0</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:double">
+            <xs:minInclusive value="0.0"/>
+            <xs:maxInclusive value="1.0"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="HeightFactor" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>The opening height divided by the window or door height, defaults to 0</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:double">
+            <xs:minInclusive value="0.0"/>
+            <xs:maxInclusive value="1.0"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="StartHeightFactor" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>The Start Height divided by the window or door height. Start Height is the distance between the bottom of the window or door and the bottom of the window or door opening. The sum of the Height Factor and the Start Height Factor must be less than 1.0 in order to have the opening within the window or door dimensions. Defaults to 0.0</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:double">
+            <xs:minInclusive value="0.0"/>
+            <xs:maxInclusive value="1.0"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="NodeType">
+    <xs:sequence>
+      <xs:element name="Description" type="xs:string" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Description of the node</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="PressureHandling" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Handling of pressure at this node, defaults to Variable</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="Simulated">
+              <xs:annotation>
+                <xs:documentation>Pressure is computed from the pressure network simlation</xs:documentation>
+              </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="Fixed">
+              <xs:annotation>
+                <xs:documentation>Pressure is fixed and never changes</xs:documentation>
+              </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="Calculated">
+              <xs:annotation>
+                <xs:documentation>Pressure is calculated from parameters that may change during the simulation</xs:documentation>
+              </xs:annotation>
+            </xs:enumeration>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="RelativeHeight" type="xs:double" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Height of the node relative to the origin</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="DefaultState" type="afn:AirStateType" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="ID" type="xs:ID">
+      <xs:annotation>
+        <xs:documentation>Name of node, must be unique</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+  <xs:complexType name="LinkType">
+    <xs:sequence>
+      <xs:element name="Description" type="xs:string" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Description of the link</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="ElementID">
+        <xs:annotation>
+          <xs:documentation>ID of linked element</xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+          <xs:attribute name="IDref" type="xs:IDREF" use="required"/>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="Multiplier" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Link multipler [-], defaults to 1</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:double">
+            <xs:minExclusive value="0.0"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="Nodes">
+        <xs:annotation>
+          <xs:documentation>The set of two nodes that are connected by link</xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Node" minOccurs="2" maxOccurs="2">
+              <xs:annotation>
+                <xs:documentation>Node connection information</xs:documentation>
+              </xs:annotation>
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="NodeID">
+                    <xs:annotation>
+                      <xs:documentation>ID of linked node</xs:documentation>
+                    </xs:annotation>
+                    <xs:complexType>
+                      <xs:attribute name="IDref" type="xs:IDREF" use="required"/>
+                    </xs:complexType>
+                  </xs:element>
+                  <xs:element name="RelativeHeight" type="xs:double" minOccurs="0">
+                    <xs:annotation>
+                      <xs:documentation>Height of the link relative to the node [m], defaults to 0</xs:documentation>
+                    </xs:annotation>
+                  </xs:element>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute name="ID" type="xs:ID">
+      <xs:annotation>
+        <xs:documentation>Name of link, must be unique</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+</xs:schema>

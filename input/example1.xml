@@ -1,0 +1,81 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<AirflowNetwork xmlns="http://github.com/jasondegraw/AirflowNetwork"
+                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                xsi:schemaLocation="http://github.com/jasondegraw/AirflowNetwork airflownetwork.xsd">
+  <AirflowElements>
+    <PowerLaw ID="Crack1">
+      <Coefficient>1.0e-5</Coefficient>
+    </PowerLaw>
+  </AirflowElements>
+  <Nodes>
+    <Node ID="one">
+      <PressureHandling>Fixed</PressureHandling>
+      <DefaultState>
+        <Temperature>293.15</Temperature>
+        <Pressure>101525.0</Pressure>
+      </DefaultState>
+    </Node>
+    <Node ID="two">
+      <PressureHandling>Simulated</PressureHandling>
+    </Node>
+    <Node ID="three">
+      <PressureHandling>Simulated</PressureHandling>
+    </Node>
+    <Node ID="four">
+      <PressureHandling>Simulated</PressureHandling>
+    </Node>
+    <Node ID="five">
+      <PressureHandling>Fixed</PressureHandling>
+      <DefaultState>
+        <Temperature>293.15</Temperature>
+        <Pressure>101325.0</Pressure>
+      </DefaultState>
+    </Node>
+  </Nodes>
+  <Links>
+    <Link ID="one-two">
+      <ElementID IDref="Crack1"/>
+      <Nodes>
+        <Node>
+          <NodeID IDref="one"/>
+        </Node>
+        <Node>
+          <NodeID IDref="two"/>
+        </Node>
+      </Nodes>
+    </Link>
+    <Link ID="two-three">
+      <ElementID IDref="Crack1"/>
+      <Nodes>
+        <Node>
+          <NodeID IDref="two"/>
+        </Node>
+        <Node>
+          <NodeID IDref="three"/>
+        </Node>
+      </Nodes>
+    </Link>
+    <Link ID="three-four">
+      <ElementID IDref="Crack1"/>
+      <Nodes>
+        <Node>
+          <NodeID IDref="three"/>
+        </Node>
+        <Node>
+          <NodeID IDref="four"/>
+        </Node>
+      </Nodes>
+    </Link>
+    <Link ID="four-five">
+      <ElementID IDref="Crack1"/>
+      <Nodes>
+        <Node>
+          <NodeID IDref="four"/>
+        </Node>
+        <Node>
+          <NodeID IDref="five"/>
+        </Node>
+      </Nodes>
+    </Link>
+  </Links>
+</AirflowNetwork>
