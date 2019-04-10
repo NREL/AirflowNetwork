@@ -138,9 +138,19 @@ double airKinematicVisc(double T, // Temperature in Celsius
 
 template <typename P> struct State
 {
+  State() : temperature(P::temperature_0), pressure(P::pressure_0), humidity_ratio(P::humidity_ratio_0),
+    density(P::density(pressure, temperature, humidity_ratio)), sqrt_density(std::sqrt(P::density(pressure, temperature, humidity_ratio))),
+    viscosity(P::viscosity(temperature))
+  {}
+
+  State(double pressure, double temperature, double humidity_ratio) : temperature(temperature), pressure(pressure), humidity_ratio(humidity_ratio),
+    density(P::density(pressure, temperature, humidity_ratio)), sqrt_density(std::sqrt(density)),
+    viscosity(P::viscosity(temperature))
+  {}
+
   double temperature{ P::temperature_0 };
-  // double pressure;      //{0.0}; // gage pressure
-  double humidityRatio{ P::humidity_ratio_0 };
+  double pressure{ P::pressure_0 };  // absolute pressure
+  double humidity_ratio{ P::humidity_ratio_0 };
   double density{ P::density(P::pressure_0, P::temperature_0, P::humidity_ratio_0) };
   double sqrt_density{ sqrt(P::density(P::pressure_0, P::temperature_0, P::humidity_ratio_0)) };
   double viscosity{ P::viscosity(P::temperature_0) };

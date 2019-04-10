@@ -44,10 +44,17 @@ template <typename I, typename P> struct Model
     return success;
   }
 
+  bool linear_initialize()
+  {
+    skyline->clear();
+    for (auto& link : links) {
+      double C = link.element.linearize(link.node0, link.node1);
+    }
+  }
+
 private:
   bool setup()
   {
-
     // Figure out the skyline heights
     std::vector<I> h(simulated_nodes.size(), 0);
     for (auto& el : links) {
@@ -70,7 +77,7 @@ private:
           return false;
         }
 #endif
-        h[i] = std::max(h[i], j - i);
+        h[j] = std::max(h[j], j - i);
       }
     }
 

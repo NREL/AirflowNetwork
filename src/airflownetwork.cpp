@@ -42,15 +42,15 @@ int main(int argc, char* argv[])
   int node_count = 0;
   std::cout << "Nodes ---------------- " << std::endl;
   for (auto& el : model.simulated_nodes) {
-    std::cout << "\tSimulated:" << el.name << std::endl;
+    std::cout << "\tSimulated:" << el.name << " [" << el.index << ']' << std::endl;
     ++node_count;
   }
   for (auto& el : model.fixed_nodes) {
-    std::cout << "\tFixed:" << el.name << std::endl;
+    std::cout << "\tFixed:" << el.name << " [" << el.index << ']' << std::endl;
     ++node_count;
   }
   for (auto& el : model.calculated_nodes) {
-    std::cout << "\tCalculated:" << el.name << std::endl;
+    std::cout << "\tCalculated:" << el.name << " [" << el.index << ']' << std::endl;
     ++node_count;
   }
   /*
@@ -79,7 +79,8 @@ int main(int argc, char* argv[])
   std::cout << "Links ---------------- " << std::endl;
   for (auto& el : model.links) {
     ++link_count;
-    std::cout << '\t' << el.name << '(' << el.node0.name << "--" << el.element.name << "-->" << el.node1.name << ')' << std::endl;
+    std::cout << '\t' << el.name << '(' << el.node0.name << "--" << el.element.name << "-->" << el.node1.name << "), ["
+      << el.index0 << ',' << el.index1 << ']' << std::endl;
   }
 
   std::cout << "Found " << link_count << " Link(s)" << std::endl;
