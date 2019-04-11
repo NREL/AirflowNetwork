@@ -3,7 +3,7 @@
 
 #include <string>
 #include <functional>
-#include "airflowelement.hpp"
+#include "element.hpp"
 #include "node.hpp"
 
 namespace airflownetwork {

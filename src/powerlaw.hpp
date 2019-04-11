@@ -1,7 +1,7 @@
 #ifndef POWERLAW_HPP
 #define POWERLAW_HPP
 
-#include "airflowelement.hpp"
+#include "element.hpp"
 #include "properties.hpp"
 
 namespace airflownetwork {

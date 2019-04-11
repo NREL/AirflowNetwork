@@ -1,16 +1,12 @@
 project(executable)
 
-set(srcs properties.cpp
-         node.cpp
-		 model.cpp
-		 link.cpp
-		 powerlaw.cpp)
+set(srcs properties.cpp)
 
 set(hdrs properties.hpp
          node.hpp
 		 model.hpp
 		 link.hpp
-		 airflowelement.hpp
+		 element.hpp
 		 powerlaw.hpp)
 
 set(includes ../dependencies/skyline/include/skyline.hpp)
