@@ -49,9 +49,9 @@ inline double validate_humidity_ratio(double v, double default)
   return v;
 }
 
-template <typename P> struct AirflowElement
+template <typename P> struct Element
 {
-  AirflowElement(const std::string& name) : name(name)
+  Element(const std::string& name) : name(name)
   {}
 
   const std::string name;

@@ -12,7 +12,7 @@ namespace airflownetwork {
 //double validate_temperature(double v, double default);
 //double validate_humidity_ratio(double v, double default);
 
-template <typename P> struct PowerLaw : public AirflowElement<P> // Surface crack component
+template <typename P> struct PowerLaw : public Element<P> // Surface crack component
 {
   const double coefficient;  // Air Mass Flow Coefficient [kg/s at 1Pa]
   const double exponent;     // Air Mass Flow exponent [dimensionless]
@@ -22,7 +22,7 @@ template <typename P> struct PowerLaw : public AirflowElement<P> // Surface crac
 
   // Default Constructor
   PowerLaw(const std::string &name, double coefficient, double exponent=0.65, double referenceP=101325.0, double referenceT=20.0,
-    double referenceW=0.0) : AirflowElement(name), coefficient(validate_coefficient(coefficient)), exponent(validate_exponent(exponent,0.65)),
+    double referenceW=0.0) : Element(name), coefficient(validate_coefficient(coefficient)), exponent(validate_exponent(exponent,0.65)),
     referenceP(validate_pressure(referenceP, 101325.0)), referenceT(validate_pressure(referenceT, 20.0)),
     referenceW(validate_pressure(referenceW, 0.0))
   {

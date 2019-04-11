@@ -490,8 +490,8 @@ public:
 
   std::vector<Link<I,P>> links;
 
-  std::unordered_map<std::string, std::reference_wrapper<AirflowElement<P>>> element_lookup;
-  //std::unordered_map<std::string, AirflowElement<P>&> element_lookup;
+  std::unordered_map<std::string, std::reference_wrapper<Element<P>>> element_lookup;
+  //std::unordered_map<std::string, Element<P>&> element_lookup;
   std::vector<PowerLaw<P>> powerlaw_elements;
 
   std::vector<std::string> errors;
