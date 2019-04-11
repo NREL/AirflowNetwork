@@ -37,7 +37,7 @@ template <typename P> struct PowerLaw : public AirflowElement<P> // Surface crac
     const State<P>& propM,           // Node 2 properties
     std::array<double, 2>& F,        // Airflow through the component [kg/s]
     std::array<double, 2>& DF        // Partial derivative:  DF/DP
-  )
+  ) const
   {
     // SUBROUTINE INFORMATION:
     //       AUTHOR         George Walton
@@ -109,7 +109,7 @@ template <typename P> struct PowerLaw : public AirflowElement<P> // Surface crac
   double linearize(double multiplier,  // Linkage multiplier
     const State<P>& propN,             // Node 1 properties
     const State<P>& propM              // Node 2 properties
-  )
+  ) const
   {
     // SUBROUTINE INFORMATION:
     //       AUTHOR         Jason DeGraw

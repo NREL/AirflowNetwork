@@ -63,12 +63,12 @@ template <typename P> struct AirflowElement
     const State<P>& propM,             // Node 2 properties
     std::array<double, 2>& F,          // Airflow through the component [kg/s]
     std::array<double, 2>& DF          // Partial derivative:  DF/DP
-  ) = 0;
+  ) const = 0;
 
   virtual double linearize(double multiplier,  // Linkage multiplier
     const State<P>& propN,                     // Node 1 properties
     const State<P>& propM                      // Node 2 properties
-  ) = 0;
+  ) const = 0;
 };
 
 }

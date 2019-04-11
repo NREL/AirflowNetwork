@@ -44,12 +44,68 @@ template <typename I, typename P> struct Model
     return success;
   }
 
-  bool linear_initialize()
+  void linear_initialize()
   {
-    skyline->clear();
+    // Clear out previous values
+    skyline->fill(0.0);
+    std::fill(b.begin(), b.end(), 0.0);
+
+    // Fill in the coefficients
     for (auto& link : links) {
-      double C = link.element.linearize(link.node0, link.node1);
+      double C = link.element.linearize(1.0, link.node0, link.node1);
+      if (link.node0.variable) {
+        // For node 0, the equation terms are C*(p0 - p1) = C*p0 - C*p1
+        skyline->diagonal(link.node0.index) += C;
+        if (link.node1.variable) {
+          (*skyline)(link.index1) -= C;
+          // For node 1, the equation terms are C*(p1 - p0) = C*p1 - C*p0
+          skyline->diagonal(link.node1.index) += C;
+        } else {
+          // Move term to the RHS: b[node0] += C*p1
+          b[link.node0.index] += C * p[link.node1.index];
+        }
+      } else {
+        // Node 0 is not simulated, account for node 1
+        // Node 1 had better be simulated, not checking here
+        // For node 1, the equation terms are C*(p1 - p0) = C*p1 - C*p0
+        skyline->diagonal(link.node1.index) += C;
+        // Move term to the RHS: b[node0] += C*p1
+        b[link.node1.index] += C * p[link.node0.index];
+      }
     }
+
+    for (auto& el : p) {
+      std::cout << el << std::endl;
+    }
+    std::cout << std::endl;
+
+    for (auto& el : b) {
+      std::cout << el << std::endl;
+    }
+    std::cout << std::endl;
+
+    for (auto& el : skyline->diagonal()) {
+      std::cout << el << std::endl;
+    }
+    std::cout << std::endl;
+
+    // Solve
+    skyline->ldlt_solve(b);
+
+    for (auto& el : b) {
+      std::cout << el << std::endl;
+    }
+  }
+
+  bool validate_network()
+  {
+    for (auto& link : links) {
+      if (!(link.node0.variable || link.node1.variable)) {
+        errors.push_back("Link \"" + link.name + "\" connects two non-simulated nodes");
+        return false;
+      }
+    }
+    return true;
   }
 
 private:
@@ -109,7 +165,6 @@ private:
   }
 
 
-
   bool load_nodes(const pugi::xml_node &nodes)
   {
     bool success{ true };
@@ -143,16 +198,34 @@ private:
         height = node.text().as_double();
       }
 
-      switch (type) {
-      case NodeType::Simulated:
-        simulated_nodes.emplace_back(name, height);
-        break;
-      case NodeType::Fixed:
-        fixed_nodes.emplace_back(name, height);
-        break;
-      case NodeType::Calculated:
-        calculated_nodes.emplace_back(name, height);
-        break;
+      node = el.child("DefaultState");
+      if (node) {
+        double P, T, W;
+        success &= load_state(node, "Node \"" + name + "\"", P, T, W);
+
+        switch (type) {
+        case NodeType::Simulated:
+          simulated_nodes.emplace_back(name, height, P, T, W);
+          break;
+        case NodeType::Fixed:
+          fixed_nodes.emplace_back(name, height, P, T, W);
+          break;
+        case NodeType::Calculated:
+          calculated_nodes.emplace_back(name, height, P, T, W);
+          break;
+        }
+      } else {
+        switch (type) {
+        case NodeType::Simulated:
+          simulated_nodes.emplace_back(name, height);
+          break;
+        case NodeType::Fixed:
+          fixed_nodes.emplace_back(name, height);
+          break;
+        case NodeType::Calculated:
+          calculated_nodes.emplace_back(name, height);
+          break;
+        }
       }
     }
 
@@ -160,6 +233,7 @@ private:
       // Build the overall lookup table, set up the pressure vector, and assign indices
       I i{ 0 };
       p.resize(simulated_nodes.size() + calculated_nodes.size() + fixed_nodes.size());
+      b.resize(simulated_nodes.size());
       for (auto& el : simulated_nodes) {
         node_lookup.emplace(el.name, el);
         el.variable = true;
@@ -424,6 +498,7 @@ public:
   std::vector<std::string> warnings;
 
   std::vector<double> p;
+  std::vector<double> b; // RHS for solution
 
   std::unique_ptr<skyline::SymmetricMatrix<I, double, std::vector>> skyline;
 

@@ -85,5 +85,14 @@ int main(int argc, char* argv[])
 
   std::cout << "Found " << link_count << " Link(s)" << std::endl;
 
+  if (!model.validate_network()) {
+    for (auto& mesg : model.errors) {
+      std::cerr << mesg << std::endl;
+    }
+    return 1;
+  }
+
+  model.linear_initialize();
+
   return 0;
 }

@@ -10,8 +10,8 @@ enum class NodeType {Simulated, Fixed, Calculated};
 
 template <typename I, typename P> struct Node : State<P>
 {
-  Node(const std::string &name, double height=0.0, double temperature=P::temperature_0, double pressure=P::pressure_0,
-    double humidity_ratio=P::humidity_ratio_0) : State<P>(temperature, pressure, humidity_ratio), name(name), height(height),
+  Node(const std::string &name, double height=0.0, double pressure=P::pressure_0, double temperature = P::temperature_0,
+    double humidity_ratio=P::humidity_ratio_0) : State<P>(pressure, temperature, humidity_ratio), name(name), height(height),
     variable(false), index(0)
   {}
 
