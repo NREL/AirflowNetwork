@@ -11,8 +11,6 @@
 #include "pugixml.hpp"
 #include "skyline.hpp"
 
-#define ORDERED_NODES
-
 namespace airflownetwork {
 
 template <typename I, typename P> struct Model
@@ -26,7 +24,7 @@ template <typename I, typename P> struct Model
   {
     bool success{ true };
     // Get the data from the XML
-    auto elements = root.child("AirflowElements");
+    auto elements = root.child("Elements");
     if (elements) {
       success &= load_elements(elements);
     }
@@ -46,9 +44,9 @@ template <typename I, typename P> struct Model
 
   void linear_initialize()
   {
-    // Clear out previous values
+    // Clear out previous values, use the sum vector
     skyline->fill(0.0);
-    std::fill(b.begin(), b.end(), 0.0);
+    std::fill(sum.begin(), sum.end(), 0.0);
 
     // Fill in the coefficients
     for (auto& link : links) {
@@ -62,16 +60,17 @@ template <typename I, typename P> struct Model
           skyline->diagonal(link.node1.index) += C;
         } else {
           // Move term to the RHS: b[node0] += C*p1
-          b[link.node0.index] += C * p[link.node1.index];
+          sum[link.node0.index] += C * p[link.node1.index];
         }
-      } else {
+      } /* This path only needed for unordered nodes
+        else {
         // Node 0 is not simulated, account for node 1
         // Node 1 had better be simulated, not checking here
         // For node 1, the equation terms are C*(p1 - p0) = C*p1 - C*p0
         skyline->diagonal(link.node1.index) += C;
         // Move term to the RHS: b[node0] += C*p1
-        b[link.node1.index] += C * p[link.node0.index];
-      }
+        sum[link.node1.index] += C * p[link.node0.index];
+      }*/
     }
 
     for (auto& el : p) {
@@ -79,7 +78,7 @@ template <typename I, typename P> struct Model
     }
     std::cout << std::endl;
 
-    for (auto& el : b) {
+    for (auto& el : sum) {
       std::cout << el << std::endl;
     }
     std::cout << std::endl;
@@ -90,9 +89,9 @@ template <typename I, typename P> struct Model
     std::cout << std::endl;
 
     // Solve
-    skyline->ldlt_solve(b);
+    skyline->ldlt_solve(sum);
 
-    for (auto& el : b) {
+    for (auto& el : sum) {
       std::cout << el << std::endl;
     }
   }
@@ -117,18 +116,18 @@ private:
       if (el.node0.variable && el.node1.variable) {
         I i = el.node0.index;
         I j = el.node1.index;
-#ifdef ORDERED_NODES
-        // In the ordered case, only need to check for the possibility of a horrifying loop 
-        if (i == j) {
-          errors.push_back("Link \"" + el.name + "\" connects a node to itself and is a loop");
-          return false;
-        }
-#else
+#ifdef UNORDERED_NODES
         // Hijinks to avoid problems with unsigned types
         if (i < j) {
           i = el.node1.index;
           j = el.node0.index;
         } else if (i == j) {
+          errors.push_back("Link \"" + el.name + "\" connects a node to itself and is a loop");
+          return false;
+        }
+#else
+        // In the ordered case, only need to check for the possibility of a horrifying loop 
+        if (i == j) {
           errors.push_back("Link \"" + el.name + "\" connects a node to itself and is a loop");
           return false;
         }
@@ -140,7 +139,9 @@ private:
     // Get the skyline solver set up
     skyline = std::make_unique<skyline::SymmetricMatrix<I, double, std::vector>>(h);
 
-#ifdef ORDERED_NODES
+#ifdef UNORDERED_NODES
+    
+#else
     for (auto& el : links) {
       I i = el.node0.index;
       I j = el.node1.index;
@@ -156,12 +157,38 @@ private:
         }
         el.index1 = index.value();
       }
-    }
-#else
-
+  }
 #endif
 
     return true;
+  }
+
+  void filjac(std::vector<double> pdrop)
+  {
+    skyline->fill(0.0);
+    std::fill(sum.begin(), sum.end(), 0.0);
+    std::array<double, 2> F;
+    std::array<double, 2> DF;
+    // Loop over the links and build the Jacobian
+    size_t i = 0;
+    for (auto& link : links) {
+      if (link.node0.variable) {
+        int nf = link.element.calculate(false, pdrop[i], link.multiplier, link.node0, link.node1, F, DF);
+        if (nf == 1) {
+          skyline.diagonal(link.node0.index) += dF[0];
+          sum[link.node0.index] += F[0];
+          if (!link.known1) {
+            skyline.upper(link.index1) -= dF[0];
+            skyline.diagonal(link.node1.index) += dF[0];
+            sumF(link.node1.index) -= F[0];
+          }
+        } else {
+          // Later
+        }
+      }
+      ++i;
+    }
+
   }
 
 
@@ -233,7 +260,7 @@ private:
       // Build the overall lookup table, set up the pressure vector, and assign indices
       I i{ 0 };
       p.resize(simulated_nodes.size() + calculated_nodes.size() + fixed_nodes.size());
-      b.resize(simulated_nodes.size());
+      sum.resize(simulated_nodes.size());
       for (auto& el : simulated_nodes) {
         node_lookup.emplace(el.name, el);
         el.variable = true;
@@ -369,14 +396,14 @@ private:
       }
       auto node1_ref{ found_node->second };
 
-#ifdef ORDERED_NODES
+#ifdef UNORDERED_NODES
+      links.emplace_back(name, node0_ref, node1_ref, element_ref, h[0], h[1], 0.0, 0.0, multiplier);
+#else
       if (node0_ref.get().index < node1_ref.get().index) {
         links.emplace_back(name, node0_ref, node1_ref, element_ref, h[0], h[1], 0.0, 0.0, multiplier);
       } else {
         links.emplace_back(name, node1_ref, node0_ref, element_ref, h[1], h[0], 0.0, 0.0, multiplier);
       }
-#else
-      links.emplace_back(name, node0_ref, node1_ref, element_ref, h[0], h[1], 0.0, 0.0, multiplier);
 #endif
 
     }
@@ -385,27 +412,57 @@ private:
 
   bool load_state(const pugi::xml_node& state, std::string &label, double &P, double &T, double &W)
   {
+    T = P::temperature_0;
     P = P::pressure_0;
     W = P::humidity_ratio_0;
     bool success{ true };
-    auto subel = state.child("Temperature");
-    if (subel) {
-      T = subel.text().as_double();
-
-      auto node = state.child("Pressure");
-      if (node) {
-        P = node.text().as_double();
+    auto node = state.child("Temperature");
+    if (node) {
+      T = node.text().as_double();
+      auto attr = node.attribute("units");
+      if (!attr) {
+        errors.push_back(label + " temperature is missing the required units attribute");
+        return false;
       }
 
-      node = state.child("HumidityRatio");
-      if (node) {
-        W = node.text().as_double();
+      std::string units_string = attr.as_string();
+      if (units_string == "K") {
+        T -= 273.15;
+      } else if (units_string == "F") {
+        T = 5.0 * (T - 32.0) / 9.0;
+      } else if (units_string == "R") {
+        T = 5.0 * (T - 491.67) / 9.0;
+      } else if (units_string != "C") {
+        errors.push_back(label + " temperature unit \"" + units_string + "\" is not recognized");
+        return false;
       }
-
-    } else {
-      errors.push_back(label + " reference state does not have a specified temperature");
-      success = false;
     }
+
+    node = state.child("Pressure");
+    if (node) {
+      P = node.text().as_double();
+      auto attr = node.attribute("units");
+      if (!attr) {
+        errors.push_back(label + " pressure is missing the required units attribute");
+        return false;
+      }
+      
+      // Need more pressure units here
+      std::string units_string = attr.as_string();
+      if (units_string == "Pag") {
+        P += 101325.0;
+      } else if (units_string != "Pa") {
+        errors.push_back(label + " pressure unit \"" + units_string + "\" is not recognized");
+        return false;
+      }
+      
+    }
+
+    node = state.child("HumidityRatio");
+    if (node) {
+      W = node.text().as_double();
+    }
+
     return success;
   }
 
@@ -420,8 +477,20 @@ private:
       return false;
     }
 
+    bool contam{ false };
+    auto node = element.child("Formulation");
+    if (node) {
+      std::string value = node.text().as_string();
+      if (value == "CONTAM") {
+        contam = true;
+      } else if (value != "AIRNET") {
+        errors.push_back("Element \"" + id + "\" has unsupported formulation \"" + value + "\"");
+        return false;
+      }
+    }
+
     double coefficient;
-    auto node = element.child("Coefficient");
+    node = element.child("Coefficient");
     if (node) {
       coefficient = node.text().as_double();
     } else {
@@ -442,17 +511,21 @@ private:
     }
 
     // Stop here for now, only support AIRNET/E+ max flow selection
-
-    node = element.child("ReferenceState");
-    if (node) {
-      double p0, T0, w0;
-      if (load_state(node, "Power law element \"" + id +"\"", p0, T0, w0)) {
-        powerlaw_elements.emplace_back(name, coefficient, exponent, p0, T0, w0);
-      } else {
-        // TODO: Handle failure here
-      }
+    if (contam) {
+      contamx_powerlaw_elements.emplace_back(id, coefficient, laminar_coefficient, exponent);
     } else {
-      powerlaw_elements.emplace_back(id, coefficient, exponent);
+      node = element.child("ReferenceState");
+      if (node) {
+        double p0, T0, w0;
+        if (load_state(node, "Power law element \"" + id + "\"", p0, T0, w0)) {
+          powerlaw_elements.emplace_back(id, coefficient, laminar_coefficient, exponent, p0, T0, w0);
+        } else {
+          // TODO: Handle failure here
+          errors.push_back("Failed to load power law element \"" + id + "\"");
+        }
+      } else {
+        powerlaw_elements.emplace_back(id, coefficient, laminar_coefficient, exponent);
+      }
     }
     
     return true;
@@ -476,6 +549,11 @@ private:
       // Check for clashes?
       element_lookup.emplace(el.name, el);
     }
+
+    for (auto& el : contamx_powerlaw_elements) {
+      // Check for clashes?
+      element_lookup.emplace(el.name, el);
+    }
     return success;
   }
 
@@ -493,12 +571,13 @@ public:
   std::unordered_map<std::string, std::reference_wrapper<Element<P>>> element_lookup;
   //std::unordered_map<std::string, Element<P>&> element_lookup;
   std::vector<PowerLaw<P>> powerlaw_elements;
+  std::vector<ContamXPowerLaw<P>> contamx_powerlaw_elements;
 
   std::vector<std::string> errors;
   std::vector<std::string> warnings;
 
   std::vector<double> p;
-  std::vector<double> b; // RHS for solution
+  std::vector<double> sum; // RHS for solution
 
   std::unique_ptr<skyline::SymmetricMatrix<I, double, std::vector>> skyline;
 

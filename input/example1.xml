@@ -1,18 +1,23 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <AirflowNetwork xmlns="http://github.com/jasondegraw/AirflowNetwork"
                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                 xsi:schemaLocation="http://github.com/jasondegraw/AirflowNetwork airflownetwork.xsd">
-  <AirflowElements>
+  <Elements>
     <PowerLaw ID="Crack1">
+      <FlowBasis>Mass</FlowBasis>
       <Coefficient>1.0e-5</Coefficient>
+      <Exponent>0.65</Exponent>
+      <Transition>
+        <ByMinimum/>
+      </Transition>
     </PowerLaw>
-  </AirflowElements>
+  </Elements>
   <Nodes>
     <Node ID="one">
       <PressureHandling>Fixed</PressureHandling>
       <DefaultState>
-        <Temperature>293.15</Temperature>
-        <Pressure>101525.0</Pressure>
+        <Temperature units="K">293.15</Temperature>
+        <Pressure units="Pa">101525.0</Pressure>
       </DefaultState>
     </Node>
     <Node ID="two">
@@ -27,8 +32,8 @@
     <Node ID="five">
       <PressureHandling>Fixed</PressureHandling>
       <DefaultState>
-        <Temperature>293.15</Temperature>
-        <Pressure>101325.0</Pressure>
+        <Temperature units="K">293.15</Temperature>
+        <Pressure units="Pa">101325.0</Pressure>
       </DefaultState>
     </Node>
   </Nodes>

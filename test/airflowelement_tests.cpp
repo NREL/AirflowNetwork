@@ -4,7 +4,7 @@
 
 TEST_CASE("Test the power law element", "[PowerLaw]")
 {
-  airflownetwork::PowerLaw<airflownetwork::properties::Fixed> powerlaw("powerlaw", 0.001);
+  airflownetwork::PowerLaw<airflownetwork::properties::Fixed> powerlaw("powerlaw", 0.001, 0.001);
   airflownetwork::State<airflownetwork::properties::Fixed> state0;
   airflownetwork::State<airflownetwork::properties::Fixed> state1;
 
