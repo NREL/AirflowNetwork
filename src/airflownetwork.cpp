@@ -94,5 +94,15 @@ int main(int argc, char* argv[])
 
   model.linear_initialize();
 
+  //model.save("out.xml");
+
+  model.open_output("output");
+  model.write_output(0.0);
+
+  model.steady_solve();
+  model.write_output(0.0);
+
+  model.close_output();
+
   return 0;
 }

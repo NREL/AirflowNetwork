@@ -52,6 +52,26 @@
             </xs:sequence>
           </xs:complexType>
         </xs:element>
+        <xs:element name="FlowResults" minOccurs="0">
+          <xs:annotation>
+            <xs:documentation>Flow results by link</xs:documentation>
+          </xs:annotation>
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="FlowResult" type="afn:FlowResultType" maxOccurs="unbounded"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="PressureResults" minOccurs="0">
+          <xs:annotation>
+            <xs:documentation>Pressure results by node</xs:documentation>
+          </xs:annotation>
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="PressureResult" type="afn:PressureResultType" maxOccurs="unbounded"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
       </xs:sequence>
     </xs:complexType>
   </xs:element>
@@ -568,25 +588,24 @@
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
+  <xs:simpleType name="PressureUnitsEnum">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Pa"/>
+      <xs:enumeration value="psi"/>
+      <xs:enumeration value="Pag"/>
+      <xs:enumeration value="psig"/>
+      <xs:enumeration value="atm"/>
+      <xs:enumeration value="inches water"/>
+      <xs:enumeration value="inches Hg"/>
+    </xs:restriction>
+  </xs:simpleType>
   <xs:complexType name="PressureQuantityType">
     <xs:annotation>
       <xs:documentation>A pressure quantity with specified units</xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
       <xs:extension base="xs:double">
-        <xs:attribute name="units" use="required">
-          <xs:simpleType>
-            <xs:restriction base="xs:string">
-              <xs:enumeration value="Pa"/>
-              <xs:enumeration value="psi"/>
-              <xs:enumeration value="Pag"/>
-              <xs:enumeration value="psig"/>
-              <xs:enumeration value="atm"/>
-              <xs:enumeration value="inches water"/>
-              <xs:enumeration value="inches Hg"/>
-            </xs:restriction>
-          </xs:simpleType>
-        </xs:attribute>
+        <xs:attribute name="units" type="afn:PressureUnitsEnum" use="required"/>
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
@@ -626,20 +645,19 @@
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
+  <xs:simpleType name="MassFlowUnitsEnum">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="kg/s"/>
+      <xs:enumeration value="lb/s"/>
+    </xs:restriction>
+  </xs:simpleType>
   <xs:complexType name="MassFlowRateQuantityType">
     <xs:annotation>
       <xs:documentation>A mass flow rate quantity with specified units</xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
       <xs:extension base="afn:AbsoluteQuantityType">
-        <xs:attribute name="units" use="required">
-          <xs:simpleType>
-            <xs:restriction base="xs:string">
-              <xs:enumeration value="kg/s"/>
-              <xs:enumeration value="lb/s"/>
-            </xs:restriction>
-          </xs:simpleType>
-        </xs:attribute>
+        <xs:attribute name="units" type="afn:MassFlowUnitsEnum" use="required"/>
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
@@ -648,5 +666,99 @@
       <xs:element name="MassFlowRate" type="afn:VolumeFlowRateQuantityType"/>
       <xs:element name="VolumeFlowRate" type="afn:MassFlowRateQuantityType"/>
     </xs:choice>
+  </xs:complexType>
+  <xs:complexType name="DurationQuantityType">
+    <xs:annotation>
+      <xs:documentation>A mass flow rate quantity with specified units</xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base="afn:AbsoluteQuantityType">
+        <xs:attribute name="units" use="required">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="s"/>
+              <xs:enumeration value="min"/>
+              <xs:enumeration value="hr"/>
+              <xs:enumeration value="day"/>
+              <xs:enumeration value="week"/>
+              <xs:enumeration value="month"/>
+              <xs:enumeration value="year"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="FlowResultType">
+    <xs:sequence>
+      <xs:element name="DateTime" type="xs:dateTime" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Timestamp associated with the results (CCYY-MM-DDThh:mm:ss.zzz)</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Time" type="afn:DurationQuantityType">
+        <xs:annotation>
+          <xs:documentation>Time duration associated with the results</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Flows">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Flow" type="afn:FlowType"/>
+          </xs:sequence>
+          <xs:attribute name="units" type="afn:MassFlowUnitsEnum" use="required"/>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="FlowType">
+    <xs:annotation>
+      <xs:documentation>A mass flow rate quantity with specified units</xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base="xs:decimal">
+        <xs:attribute name="IDref" type="xs:IDREF" use="required">
+          <xs:annotation>
+            <xs:documentation>ID of associated link or element</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="PressureResultType">
+    <xs:sequence>
+      <xs:element name="DateTime" type="xs:dateTime" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Timestamp associated with the results (CCYY-MM-DDThh:mm:ss.zzz)</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Time" type="afn:DurationQuantityType">
+        <xs:annotation>
+          <xs:documentation>Time duration associated with the results</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Pressures">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Pressure" type="afn:PressureType"/>
+          </xs:sequence>
+          <xs:attribute name="units" type="afn:PressureUnitsEnum" use="required"/>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="PressureType">
+    <xs:annotation>
+      <xs:documentation>A pressure quantity with specified units</xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base="xs:decimal">
+        <xs:attribute name="IDref" type="xs:IDREF" use="required">
+          <xs:annotation>
+            <xs:documentation>ID of associated node or element</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
   </xs:complexType>
 </xs:schema>

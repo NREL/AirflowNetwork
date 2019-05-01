@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <vector>
 #include <array>
+#include <fstream>
 #include "node.hpp"
 #include "link.hpp"
 #include "powerlaw.hpp"
@@ -15,7 +16,7 @@ namespace airflownetwork {
 
 template <typename I, typename P> struct Model
 {
-  Model(const std::string &name) : name(name)
+  Model(const std::string &name) : name(name), tolerance(1.0e-4)
   {
 
   }
@@ -44,9 +45,9 @@ template <typename I, typename P> struct Model
 
   void linear_initialize()
   {
-    // Clear out previous values, use the sum vector
+    // Clear out previous values
     skyline->fill(0.0);
-    std::fill(sum.begin(), sum.end(), 0.0);
+    std::fill_n(p.begin(), simulated_nodes.size(), 0.0);
 
     // Fill in the coefficients
     for (auto& link : links) {
@@ -60,7 +61,7 @@ template <typename I, typename P> struct Model
           skyline->diagonal(link.node1.index) += C;
         } else {
           // Move term to the RHS: b[node0] += C*p1
-          sum[link.node0.index] += C * p[link.node1.index];
+          p[link.node0.index] += C * p[link.node1.index];
         }
       } /* This path only needed for unordered nodes
         else {
@@ -69,7 +70,7 @@ template <typename I, typename P> struct Model
         // For node 1, the equation terms are C*(p1 - p0) = C*p1 - C*p0
         skyline->diagonal(link.node1.index) += C;
         // Move term to the RHS: b[node0] += C*p1
-        sum[link.node1.index] += C * p[link.node0.index];
+        p[link.node1.index] += C * p[link.node0.index];
       }*/
     }
 
@@ -78,21 +79,96 @@ template <typename I, typename P> struct Model
     }
     std::cout << std::endl;
 
-    for (auto& el : sum) {
-      std::cout << el << std::endl;
-    }
-    std::cout << std::endl;
-
+    /*
     for (auto& el : skyline->diagonal()) {
       std::cout << el << std::endl;
     }
     std::cout << std::endl;
+    */
 
     // Solve
-    skyline->ldlt_solve(sum);
+    skyline->ldlt_solve(p);
 
-    for (auto& el : sum) {
+    for (auto& el : p) {
       std::cout << el << std::endl;
+    }
+
+    // Copy the pressures into the nodes
+    for(auto &node : simulated_nodes) {
+      node.pressure = p[node.index];
+    }
+
+    // Compute flows
+    std::array<double, 2> F, DF;
+    for (auto& link : links) {
+      double dp = link.node0.pressure - link.node1.pressure;
+      link.element.calculate(true, dp, link.multiplier, link.node0, link.node1, F, DF);
+      link.flow0 = F[0];
+    }
+  }
+
+  void calculate_stack_pressures()
+  {
+    for (auto& link : links) {
+      link.stack_delta_p = link.upwind_stack_pressure();
+    }
+  }
+
+  void steady_solve()
+  {
+    calculate_stack_pressures();
+
+    double delta_max = 1.0e6;
+    int iter_max{ 10 };
+    int iter{ 0 };
+    do {
+      // Compute the pressure differences across the links
+      for (auto& link : links) {
+        link.delta_p = link.node0.pressure - link.node1.pressure + link.stack_delta_p + link.added_delta_p;
+      }
+
+      // Fill the Jacobian matrix
+      filjac();
+
+      // Solve the system
+      skyline->ldlt_solve(sum);
+
+      // Update
+      delta_max = 0.0;
+      for (size_t i = 0; i < simulated_nodes.size(); ++i) {
+        delta_max = std::max(delta_max, std::abs(sum[i]));
+        p[i] -= sum[i];
+        //std::cout << ' ' << sum[i];
+      }
+      //std::cout << std::endl;
+     
+      // Copy the pressures into the nodes
+      for (auto& node : simulated_nodes) {
+        node.pressure = p[node.index];
+      }
+
+      ++iter;
+      std::cout << iter << ' ' << delta_max << std::endl;
+      if (iter >= iter_max) {
+        // How about a warning? (don't get yourself killed)
+        break;
+      }
+    } while(delta_max > tolerance);
+
+
+    std::cout << "Iterations: " << iter << ", delta: " << delta_max << std::endl;
+
+    for (auto& el : p) {
+      std::cout << el << std::endl;
+    }
+    std::cout << std::endl;
+
+    // Final flow computation
+    std::array<double, 2> F, DF;
+    for (auto& link : links) {
+      double dp = link.node0.pressure - link.node1.pressure + link.stack_delta_p + link.added_delta_p;
+      link.element.calculate(true, dp, link.multiplier, link.node0, link.node1, F, DF);
+      link.flow = link.flow0 = F[0];
     }
   }
 
@@ -104,6 +180,81 @@ template <typename I, typename P> struct Model
         return false;
       }
     }
+    return true;
+  }
+
+  bool save(const std::string& filename) const
+  {
+    pugi::xml_document doc;
+    auto root = doc.append_child("AirflowNetwork");
+    root.append_attribute("xmlns") = "http://github.com/jasondegraw/AirflowNetwork";
+    root.append_attribute("xmlns:xsi") = "http://www.w3.org/2001/XMLSchema-instance";
+    //root.append_attribute("xmlns:xsd") = "http://www.w3.org/2001/XMLSchema";
+    root.append_attribute("xsi:schemaLocation") = "http://github.com/jasondegraw/AirflowNetwork airflownetwork.xsd";
+
+    auto xml_links = root.append_child("Links");
+    for (auto& link : links) {
+      auto el = xml_links.append_child("Link");
+      el.append_attribute("ID") = link.name.c_str();
+    }
+
+    auto xml_flow_results = root.append_child("FlowResults");
+    auto xml_flow_result = xml_flow_results.append_child("FlowResult");
+    for (auto& link : links) {
+    }
+
+    std::ofstream file(filename);
+    if (file.is_open()) {
+      doc.save(file, "  ");
+      file.close();
+      return true;
+    }
+    return false;
+  }
+
+  bool open_output(const std::string& basepath)
+  {
+    m_pressure_output = std::make_unique<std::ofstream>(basepath + "_p.csv");
+    m_flow_output = std::make_unique<std::ofstream>(basepath + "_f.csv");
+    if(!(m_pressure_output->is_open() && m_flow_output->is_open())) {
+      return false;
+    }
+    *m_pressure_output << "Time(s)";
+    for (auto& node : simulated_nodes) {
+      *m_pressure_output << ',' << node.name;
+    }
+    *m_pressure_output << std::endl;
+
+    *m_flow_output << "Time(s)";
+    for (auto& link : links) {
+      *m_flow_output << ',' << link.name;
+    }
+    *m_flow_output << std::endl;
+    return true;
+  }
+
+  bool write_output(double seconds)
+  {
+    *m_pressure_output << seconds;
+    for (auto& node : simulated_nodes) {
+      *m_pressure_output << ',' << node.pressure;
+    }
+    *m_pressure_output << std::endl;
+
+    *m_flow_output << seconds;
+    for (auto& link : links) {
+      *m_flow_output << ',' << link.flow0;
+    }
+    *m_flow_output << std::endl;
+    return true;
+  }
+
+  bool close_output()
+  {
+    m_pressure_output->close();
+    m_pressure_output.reset();
+    m_flow_output->close();
+    m_flow_output.reset();
     return true;
   }
 
@@ -163,7 +314,7 @@ private:
     return true;
   }
 
-  void filjac(std::vector<double> pdrop)
+  void filjac()
   {
     skyline->fill(0.0);
     std::fill(sum.begin(), sum.end(), 0.0);
@@ -173,15 +324,16 @@ private:
     size_t i = 0;
     for (auto& link : links) {
       if (link.node0.variable) {
-        int nf = link.element.calculate(false, pdrop[i], link.multiplier, link.node0, link.node1, F, DF);
+        int nf = link.element.calculate(false, link.delta_p, link.multiplier, link.node0, link.node1, F, DF);
         if (nf == 1) {
-          skyline.diagonal(link.node0.index) += dF[0];
+          skyline->diagonal(link.node0.index) += DF[0];
           sum[link.node0.index] += F[0];
-          if (!link.known1) {
-            skyline.upper(link.index1) -= dF[0];
-            skyline.diagonal(link.node1.index) += dF[0];
-            sumF(link.node1.index) -= F[0];
+          if (link.node1.variable) {
+            (*skyline)(link.index1) -= DF[0];
+            skyline->diagonal(link.node1.index) += DF[0];
+            sum[link.node1.index] -= F[0];
           }
+          link.flow = link.flow0 = F[0];
         } else {
           // Later
         }
@@ -219,10 +371,18 @@ private:
           warnings.push_back("Node \"" + name + "\" has unrecognized pressure handling specification \"" + text + "\", defaulting to \"Simulated\"");
         }
       }
+
       double height = 0.0;
+
+      std::string level_id;
+      node = el.child("LevelID");
+      if (node) {
+        auto attr = node.attribute("IDref");
+      }
+      
       node = el.child("RelativeHeight");
       if (node) {
-        height = node.text().as_double();
+        height += node.text().as_double();
       }
 
       node = el.child("DefaultState");
@@ -576,10 +736,15 @@ public:
   std::vector<std::string> errors;
   std::vector<std::string> warnings;
 
-  std::vector<double> p;
-  std::vector<double> sum; // RHS for solution
+  std::vector<double> p; // Current pressure value, sized to match the total number of nodes
+  std::vector<double> sum; // RHS for solution, sized to match the number of simulated nodes
 
   std::unique_ptr<skyline::SymmetricMatrix<I, double, std::vector>> skyline;
+  double tolerance;
+
+private:
+  std::unique_ptr<std::ofstream> m_pressure_output;
+  std::unique_ptr<std::ofstream> m_flow_output;
 
 };
 
