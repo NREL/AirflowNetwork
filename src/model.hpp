@@ -102,8 +102,8 @@ template <typename I, typename P> struct Model
     std::array<double, 2> F, DF;
     for (auto& link : links) {
       double dp = link.node0.pressure - link.node1.pressure;
-      link.element.calculate(true, dp, link.multiplier, link.node0, link.node1, F, DF);
-      link.flow0 = F[0];
+      link.element.calculate(false, dp, link.multiplier, link.node0, link.node1, F, DF);
+      link.flow = link.flow0 = F[0];
     }
   }
 
@@ -118,58 +118,72 @@ template <typename I, typename P> struct Model
   {
     calculate_stack_pressures();
 
+    double alpha = 1.0;
+
     double delta_max = 1.0e6;
-    int iter_max{ 10 };
-    int iter{ 0 };
+    int iter_max{ 25 };
+    int iter{ 1 };
+    double sum_max{ 0.0 };
+    // Will always do at least one iteration, so split out the first iteration
+    for (auto& link : links) {
+      link.delta_p = link.node0.pressure - link.node1.pressure + link.stack_delta_p + link.added_delta_p;
+    }
+    // Fill the Jacobian matrix
+    filjac();
+    // Solve the system
+    skyline->ldlt_solve(sum);
+    // Update the pressures in the nodes
+    for (auto& node : simulated_nodes) {
+      node.pressure -= alpha * sum[node.index];
+    }
+    // At this point, the pressures are updated for one iteration, but the flows are not
+
     do {
       // Compute the pressure differences across the links
       for (auto& link : links) {
         link.delta_p = link.node0.pressure - link.node1.pressure + link.stack_delta_p + link.added_delta_p;
       }
 
-      // Fill the Jacobian matrix
+      // Fill the Jacobian matrix, which updates the flows as well
       filjac();
+
+      // Check for convergence here
+      for (size_t i = 0; i < simulated_nodes.size(); ++i) {
+        sum_max = std::max(sum_max, std::abs(sum[i]));
+      }
+
+      std::cout << iter << ' ' << sum_max << std::endl;
+
+      if (sum_max < tolerance) {
+        //break;
+        return; // Need to return convergence information
+      }
 
       // Solve the system
       skyline->ldlt_solve(sum);
+      ++iter;
+      // Update the pressures in the nodes
+      for (auto& node : simulated_nodes) {
+        node.pressure -= alpha * sum[node.index];
+      }
 
       // Update
       delta_max = 0.0;
       for (size_t i = 0; i < simulated_nodes.size(); ++i) {
         delta_max = std::max(delta_max, std::abs(sum[i]));
-        p[i] -= sum[i];
-        //std::cout << ' ' << sum[i];
+        p[i] -= alpha*sum[i];
       }
-      //std::cout << std::endl;
      
       // Copy the pressures into the nodes
       for (auto& node : simulated_nodes) {
         node.pressure = p[node.index];
       }
 
-      ++iter;
-      std::cout << iter << ' ' << delta_max << std::endl;
-      if (iter >= iter_max) {
-        // How about a warning? (don't get yourself killed)
-        break;
-      }
-    } while(delta_max > tolerance);
+    } while (iter < iter_max); // delta_max > tolerance);
 
-
-    std::cout << "Iterations: " << iter << ", delta: " << delta_max << std::endl;
-
-    for (auto& el : p) {
-      std::cout << el << std::endl;
-    }
-    std::cout << std::endl;
-
-    // Final flow computation
-    std::array<double, 2> F, DF;
-    for (auto& link : links) {
-      double dp = link.node0.pressure - link.node1.pressure + link.stack_delta_p + link.added_delta_p;
-      link.element.calculate(true, dp, link.multiplier, link.node0, link.node1, F, DF);
-      link.flow = link.flow0 = F[0];
-    }
+    // Only get to here if there's a convergence failure
+    std::cout << "Convergence Failure" << std::endl;
+    
   }
 
   bool validate_network()
@@ -243,7 +257,7 @@ template <typename I, typename P> struct Model
 
     *m_flow_output << seconds;
     for (auto& link : links) {
-      *m_flow_output << ',' << link.flow0;
+      *m_flow_output << ',' << link.flow;
     }
     *m_flow_output << std::endl;
     return true;
