@@ -1,764 +1,1246 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- edited with XMLSpy v2019 rel. 3 (x64) (http://www.altova.com) by Jason DeGraw (NREL) -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:afn="http://github.com/jasondegraw/AirflowNetwork" targetNamespace="http://github.com/jasondegraw/AirflowNetwork" elementFormDefault="qualified">
-  <xs:annotation>
-    <xs:documentation>AirflowNetwork Schema - Version 1.1 (April 19, 2019)</xs:documentation>
-  </xs:annotation>
-  <xs:element name="AirflowNetwork">
-    <xs:complexType>
-      <xs:sequence>
-        <xs:element name="Description" type="xs:string" minOccurs="0">
-          <xs:annotation>
-            <xs:documentation>Description of the model</xs:documentation>
-          </xs:annotation>
-        </xs:element>
-        <xs:element name="Elements" minOccurs="0" maxOccurs="1">
-          <xs:annotation>
-            <xs:documentation>The set of all airflow elements used in the model</xs:documentation>
-          </xs:annotation>
-          <xs:complexType>
+    <xs:annotation>
+        <xs:documentation>AirflowNetwork Schema - Version 1.1 (April 19, 2019)</xs:documentation>
+    </xs:annotation>
+    <xs:element name="AirflowNetwork">
+        <xs:complexType>
             <xs:sequence>
-              <xs:element name="PowerLaw" type="afn:PowerLawType" minOccurs="0" maxOccurs="unbounded"/>
-              <xs:element name="DetailedOpening" type="afn:ComisDetailedOpeningType" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element name="Description" type="xs:string" minOccurs="0">
+                    <xs:annotation>
+                        <xs:documentation>Description of the model</xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+                <xs:element name="Elements" minOccurs="0" maxOccurs="1">
+                    <xs:annotation>
+                        <xs:documentation>The set of all airflow elements used in the model</xs:documentation>
+                    </xs:annotation>
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="PowerLaw" type="afn:PowerLawType" minOccurs="0" maxOccurs="unbounded"/>
+                            <xs:element name="DetailedOpening" type="afn:ComisDetailedOpeningType" minOccurs="0" maxOccurs="unbounded"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="Materials" minOccurs="0">
+                    <xs:annotation>
+                        <xs:documentation>The set of all materials used in the model</xs:documentation>
+                    </xs:annotation>
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="Description" type="xs:string" minOccurs="0">
+                                <xs:annotation>
+                                    <xs:documentation>Description of the material</xs:documentation>
+                                </xs:annotation>
+                            </xs:element>
+                            <xs:element name="Material" type="afn:MaterialType" minOccurs="1" maxOccurs="unbounded"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="Filters" minOccurs="0">
+                    <xs:annotation>
+                        <xs:documentation>The set of all filters in the model</xs:documentation>
+                    </xs:annotation>
+                    <xs:complexType>
+                        <xs:choice maxOccurs="unbounded">
+                            <xs:element name="SimpleFilter" type="afn:SimpleFilterType" maxOccurs="unbounded"/>
+                        </xs:choice>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="DimensionlessSchedules" minOccurs="0">
+                    <xs:annotation>
+                        <xs:documentation>The set of all schedules in the model</xs:documentation>
+                    </xs:annotation>
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="DimensionlessSchedule" type="afn:TimeSeriesType" maxOccurs="unbounded"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="MassSchedules" minOccurs="0">
+                    <xs:annotation>
+                        <xs:documentation>The set of all schedules in the model</xs:documentation>
+                    </xs:annotation>
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="MassSchedule" type="afn:MassTimeSeriesType" maxOccurs="unbounded"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="MassFlowSchedules" minOccurs="0">
+                    <xs:annotation>
+                        <xs:documentation>The set of all schedules in the model</xs:documentation>
+                    </xs:annotation>
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="MassFlowSchedule" type="afn:MassFlowTimeSeriesType" maxOccurs="unbounded"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="SourcesAndSinks">
+                    <xs:annotation>
+                        <xs:documentation>The set of all sources and sinks in the model</xs:documentation>
+                    </xs:annotation>
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="ScheduledSource" type="afn:ScheduledSourceType" maxOccurs="unbounded"/>
+                            <xs:element name="ConstantCoefficientSourceSink" type="afn:ConstantCoefficentSourceSinkType"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <!-- Building-Specific Elements -->
+                <xs:element name="Levels" minOccurs="0">
+                    <xs:annotation>
+                        <xs:documentation>The set of all levels in the model</xs:documentation>
+                    </xs:annotation>
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="Level" type="afn:LevelType" maxOccurs="unbounded"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="Nodes" minOccurs="0">
+                    <xs:annotation>
+                        <xs:documentation>The set of all nodes in the model</xs:documentation>
+                    </xs:annotation>
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="Node" type="afn:NodeType" maxOccurs="unbounded"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="Links" minOccurs="0">
+                    <xs:annotation>
+                        <xs:documentation>The set of all links that connect nodes in the model</xs:documentation>
+                    </xs:annotation>
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="Link" type="afn:LinkType" maxOccurs="unbounded"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="FlowResults" minOccurs="0">
+                    <xs:annotation>
+                        <xs:documentation>Flow results by link</xs:documentation>
+                    </xs:annotation>
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="FlowResult" type="afn:FlowResultType" maxOccurs="unbounded"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="PressureResults" minOccurs="0">
+                    <xs:annotation>
+                        <xs:documentation>Pressure results by node</xs:documentation>
+                    </xs:annotation>
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="PressureResult" type="afn:PressureResultType" maxOccurs="unbounded"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
             </xs:sequence>
-          </xs:complexType>
-        </xs:element>
-        <xs:element name="Levels" minOccurs="0">
-          <xs:annotation>
-            <xs:documentation>The set of all levels in the model</xs:documentation>
-          </xs:annotation>
-          <xs:complexType>
-            <xs:sequence>
-              <xs:element name="Level" type="afn:LevelType" maxOccurs="unbounded"/>
-            </xs:sequence>
-          </xs:complexType>
-        </xs:element>
-        <xs:element name="Nodes" minOccurs="0">
-          <xs:annotation>
-            <xs:documentation>The set of all nodes in the model</xs:documentation>
-          </xs:annotation>
-          <xs:complexType>
-            <xs:sequence>
-              <xs:element name="Node" type="afn:NodeType" maxOccurs="unbounded"/>
-            </xs:sequence>
-          </xs:complexType>
-        </xs:element>
-        <xs:element name="Links" minOccurs="0">
-          <xs:annotation>
-            <xs:documentation>The set of all links that connect nodes in the model</xs:documentation>
-          </xs:annotation>
-          <xs:complexType>
-            <xs:sequence>
-              <xs:element name="Link" type="afn:LinkType" maxOccurs="unbounded"/>
-            </xs:sequence>
-          </xs:complexType>
-        </xs:element>
-        <xs:element name="FlowResults" minOccurs="0">
-          <xs:annotation>
-            <xs:documentation>Flow results by link</xs:documentation>
-          </xs:annotation>
-          <xs:complexType>
-            <xs:sequence>
-              <xs:element name="FlowResult" type="afn:FlowResultType" maxOccurs="unbounded"/>
-            </xs:sequence>
-          </xs:complexType>
-        </xs:element>
-        <xs:element name="PressureResults" minOccurs="0">
-          <xs:annotation>
-            <xs:documentation>Pressure results by node</xs:documentation>
-          </xs:annotation>
-          <xs:complexType>
-            <xs:sequence>
-              <xs:element name="PressureResult" type="afn:PressureResultType" maxOccurs="unbounded"/>
-            </xs:sequence>
-          </xs:complexType>
-        </xs:element>
-      </xs:sequence>
+        </xs:complexType>
+        <!-- Constraints -->
+        <xs:key name="ElementKey">
+            <xs:selector xpath="afn:Elements/*"/>
+            <xs:field xpath="@ID"/>
+        </xs:key>
+        <xs:keyref name="LinkElementKeyRef" refer="afn:ElementKey">
+            <xs:selector xpath="afn:Links/afn:Link/afn:ElementID"/>
+            <xs:field xpath="@IDref"/>
+        </xs:keyref>
+        <xs:key name="FilterKey">
+            <xs:selector xpath="afn:Filters/*"/>
+            <xs:field xpath="@ID"/>
+        </xs:key>
+        <xs:keyref name="LinkFilterKeyRef" refer="afn:FilterKey">
+            <xs:selector xpath="afn:Links/afn:Link/afn:FilterID"/>
+            <xs:field xpath="@IDref"/>
+        </xs:keyref>
+        <xs:key name="MaterialKey">
+            <xs:selector xpath="afn:Materials/afn:Material"/>
+            <xs:field xpath="@ID"/>
+        </xs:key>
+        <xs:keyref name="SimpleFilterRemovalMaterialKeyRef" refer="afn:MaterialKey">
+            <xs:selector xpath="afn:Filters/afn:SimpleFilter/afn:RemovalEfficiencies/afn:RemovalEfficiency"/>
+            <xs:field xpath="@IDref"/>
+        </xs:keyref>
+        <xs:keyref name="ScheduledSourceMaterialKeyRef" refer="afn:MaterialKey">
+            <xs:selector xpath="afn:SourcesAndSinks/afn:ScheduledSource/afn:MaterialID"/>
+            <xs:field xpath="@IDref"/>
+        </xs:keyref>
+        <xs:key name="NodeKey">
+            <xs:selector xpath="afn:Nodes/afn:Node"/>
+            <xs:field xpath="@ID"/>
+        </xs:key>
+        <xs:keyref name="NodeKeyRef" refer="afn:NodeKey">
+            <xs:selector xpath="afn:Links/afn:Link/afn:Nodes/afn:Node/afn:NodeID"/>
+            <xs:field xpath="@IDref"/>
+        </xs:keyref>
+        <xs:key name="LevelKey">
+            <xs:selector xpath="afn:Levels/afn:Level"/>
+            <xs:field xpath="@ID"/>
+        </xs:key>
+        <xs:keyref name="NodeLevelKeyRef" refer="afn:LevelKey">
+            <xs:selector xpath="afn:Nodes/afn:Node/afn:LevelID"/>
+            <xs:field xpath="@IDref"/>
+        </xs:keyref>
+        <xs:key name="DimensionlessScheduleKey">
+            <xs:selector xpath="afn:DimensionlessSchedules/afn:DimensionlessSchedule"/>
+            <xs:field xpath="@ID"/>
+        </xs:key>
+        <xs:keyref name="LinkFilterScheduleKeyRef" refer="afn:DimensionlessScheduleKey">
+            <xs:selector xpath="afn:Links/afn:Link/afn:FilterScheduleID"/>
+            <xs:field xpath="@IDref"/>
+        </xs:keyref>
+        <xs:key name="MassScheduleKey">
+            <xs:selector xpath="afn:MassSchedules/afn:MassSchedule"/>
+            <xs:field xpath="@ID"/>
+        </xs:key>
+        <xs:keyref name="ScheduledSourceMassScheduleKeyRef" refer="afn:MassScheduleKey">
+            <xs:selector xpath="afn:SourcesAndSinks/afn:ScheduledSource/afn:MassScheduleID"/>
+            <xs:field xpath="@IDref"/>
+        </xs:keyref>
+        <xs:key name="MassFlowScheduleKey">
+            <xs:selector xpath="afn:MassFlowSchedules/afn:MassFlowSchedule"/>
+            <xs:field xpath="@ID"/>
+        </xs:key>
+        <xs:keyref name="ScheduledSourceMassFlowScheduleKeyRef" refer="afn:MassFlowScheduleKey">
+            <xs:selector xpath="afn:SourcesAndSinks/afn:ScheduledSource/afn:MassFlowScheduleID"/>
+            <xs:field xpath="@IDref"/>
+        </xs:keyref>
+    </xs:element>
+    <!-- Flow Elements -->
+    <xs:complexType name="PowerLawType">
+        <xs:annotation>
+            <xs:documentation>Power law flow element</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="Description" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Description of the power law flow element</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Formulation" minOccurs="0">
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:enumeration value="AIRNET"/>
+                        <xs:enumeration value="CONTAM"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="FlowBasis">
+                <xs:annotation>
+                    <xs:documentation>Basis upon which flow is calculated</xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:enumeration value="Mass"/>
+                        <xs:enumeration value="Volume"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="Coefficient">
+                <xs:annotation>
+                    <xs:documentation>Power law flow coefficient</xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                    <xs:restriction base="xs:double">
+                        <xs:minExclusive value="0.0"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="LaminarCoefficient" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Power law flow coefficient for small pressure differences, defaults to the coefficient value</xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                    <xs:restriction base="xs:double">
+                        <xs:minExclusive value="0.0"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="Exponent">
+                <xs:annotation>
+                    <xs:documentation>Power law flow exponent</xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                    <xs:restriction base="xs:double">
+                        <xs:minInclusive value="0.5"/>
+                        <xs:maxInclusive value="1.0"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="ReferenceState" type="afn:AirStateType" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Reference state of the power law element</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Transition">
+                <xs:annotation>
+                    <xs:documentation>Specify how small pressure differences are to be handled</xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                    <xs:choice>
+                        <xs:element name="ByMinimum" type="xs:string" fixed="">
+                            <xs:annotation>
+                                <xs:documentation>Power law flow transition by minimum flow from laminar and turbulent calculations</xs:documentation>
+                            </xs:annotation>
+                        </xs:element>
+                        <xs:element name="ReynoldsNumber">
+                            <xs:annotation>
+                                <xs:documentation>Power law flow transition Reynolds number</xs:documentation>
+                            </xs:annotation>
+                            <xs:simpleType>
+                                <xs:restriction base="xs:double">
+                                    <xs:minExclusive value="0.0"/>
+                                </xs:restriction>
+                            </xs:simpleType>
+                        </xs:element>
+                        <xs:element name="PressureDifference" type="afn:PressureQuantityType">
+                            <xs:annotation>
+                                <xs:documentation>Power law flow transition pressure difference</xs:documentation>
+                            </xs:annotation>
+                        </xs:element>
+                    </xs:choice>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="CoefficientRelationship" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Specify how laminar and turbulent coefficents are related, if at all</xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                    <xs:choice>
+                        <xs:element name="TransitionReynoldsNumber">
+                            <xs:annotation>
+                                <xs:documentation>Power law flow transition Reynolds number</xs:documentation>
+                            </xs:annotation>
+                            <xs:simpleType>
+                                <xs:restriction base="xs:double">
+                                    <xs:minExclusive value="0.0"/>
+                                </xs:restriction>
+                            </xs:simpleType>
+                        </xs:element>
+                        <xs:element name="TransitionPressureDifference" type="afn:PressureQuantityType">
+                            <xs:annotation>
+                                <xs:documentation>Power law flow transition pressure difference</xs:documentation>
+                            </xs:annotation>
+                        </xs:element>
+                    </xs:choice>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="Data" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Data that is/was used to determine the model parameters</xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="DataPoint" maxOccurs="unbounded">
+                            <xs:complexType>
+                                <xs:sequence>
+                                    <xs:choice>
+                                        <xs:element name="MassFlowRate" type="afn:MassFlowRateQuantityType"/>
+                                        <xs:element name="VolumeFlowRate" type="afn:VolumeFlowRateQuantityType"/>
+                                    </xs:choice>
+                                    <xs:element name="PressureDifference" type="afn:PressureQuantityType"/>
+                                    <xs:element name="State" type="afn:AirStateType" minOccurs="0"/>
+                                </xs:sequence>
+                            </xs:complexType>
+                        </xs:element>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="ID" type="xs:ID" use="required">
+            <xs:annotation>
+                <xs:documentation>Name of power law element, must be unique</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
     </xs:complexType>
-  </xs:element>
-  <xs:complexType name="PowerLawType">
-    <xs:sequence>
-      <xs:element name="Description" type="xs:string" minOccurs="0">
-        <xs:annotation>
-          <xs:documentation>Basis upon which flow is calculated</xs:documentation>
-        </xs:annotation>
-      </xs:element>
-      <xs:element name="Formulation" minOccurs="0">
-        <xs:simpleType>
-          <xs:restriction base="xs:string">
-            <xs:enumeration value="AIRNET"/>
-            <xs:enumeration value="CONTAM"/>
-          </xs:restriction>
-        </xs:simpleType>
-      </xs:element>
-      <xs:element name="FlowBasis">
-        <xs:simpleType>
-          <xs:restriction base="xs:string">
-            <xs:enumeration value="Mass"/>
-            <xs:enumeration value="Volume"/>
-          </xs:restriction>
-        </xs:simpleType>
-      </xs:element>
-      <xs:element name="Coefficient">
-        <xs:annotation>
-          <xs:documentation>Power law flow coefficient</xs:documentation>
-        </xs:annotation>
-        <xs:simpleType>
-          <xs:restriction base="xs:double">
-            <xs:minExclusive value="0.0"/>
-          </xs:restriction>
-        </xs:simpleType>
-      </xs:element>
-      <xs:element name="LaminarCoefficient" minOccurs="0">
-        <xs:annotation>
-          <xs:documentation>Power law flow coefficient for small pressure differences, defaults to the coefficient value</xs:documentation>
-        </xs:annotation>
-        <xs:simpleType>
-          <xs:restriction base="xs:double">
-            <xs:minExclusive value="0.0"/>
-          </xs:restriction>
-        </xs:simpleType>
-      </xs:element>
-      <xs:element name="Exponent">
-        <xs:annotation>
-          <xs:documentation>Power law flow exponent</xs:documentation>
-        </xs:annotation>
-        <xs:simpleType>
-          <xs:restriction base="xs:double">
-            <xs:minInclusive value="0.5"/>
-            <xs:maxInclusive value="1.0"/>
-          </xs:restriction>
-        </xs:simpleType>
-      </xs:element>
-      <xs:element name="ReferenceState" type="afn:AirStateType" minOccurs="0">
-        <xs:annotation>
-          <xs:documentation>Reference state of the power law element</xs:documentation>
-        </xs:annotation>
-      </xs:element>
-      <xs:element name="Transition">
-        <xs:annotation>
-          <xs:documentation>Specify how small pressure differences are to be handled</xs:documentation>
-        </xs:annotation>
-        <xs:complexType>
-          <xs:choice>
-            <xs:element name="ByMinimum" type="xs:string" fixed="">
-              <xs:annotation>
-                <xs:documentation>Power law flow transition by minimum flow from laminar and turbulent calculations</xs:documentation>
-              </xs:annotation>
-            </xs:element>
-            <xs:element name="ReynoldsNumber">
-              <xs:annotation>
-                <xs:documentation>Power law flow transition Reynolds number</xs:documentation>
-              </xs:annotation>
-              <xs:simpleType>
-                <xs:restriction base="xs:double">
-                  <xs:minExclusive value="0.0"/>
-                </xs:restriction>
-              </xs:simpleType>
-            </xs:element>
-            <xs:element name="PressureDifference" type="afn:PressureQuantityType">
-              <xs:annotation>
-                <xs:documentation>Power law flow transition pressure difference</xs:documentation>
-              </xs:annotation>
-            </xs:element>
-          </xs:choice>
-        </xs:complexType>
-      </xs:element>
-      <xs:element name="CoefficientRelationship" minOccurs="0">
-        <xs:annotation>
-          <xs:documentation>Specify how laminar and turbulent coefficents are related, if at all</xs:documentation>
-        </xs:annotation>
-        <xs:complexType>
-          <xs:choice>
-            <xs:element name="TransitionReynoldsNumber">
-              <xs:annotation>
-                <xs:documentation>Power law flow transition Reynolds number</xs:documentation>
-              </xs:annotation>
-              <xs:simpleType>
-                <xs:restriction base="xs:double">
-                  <xs:minExclusive value="0.0"/>
-                </xs:restriction>
-              </xs:simpleType>
-            </xs:element>
-            <xs:element name="TransitionPressureDifference" type="afn:PressureQuantityType">
-              <xs:annotation>
-                <xs:documentation>Power law flow transition pressure difference</xs:documentation>
-              </xs:annotation>
-            </xs:element>
-          </xs:choice>
-        </xs:complexType>
-      </xs:element>
-      <xs:element name="Data" minOccurs="0">
-        <xs:complexType>
-          <xs:sequence>
-            <xs:element name="DataPoint" maxOccurs="unbounded">
-              <xs:complexType>
-                <xs:sequence>
-                  <xs:choice>
-                    <xs:element name="MassFlowRate" type="afn:MassFlowRateQuantityType"/>
-                    <xs:element name="VolumeFlowRate" type="afn:VolumeFlowRateQuantityType"/>
-                  </xs:choice>
-                  <xs:element name="PressureDifference" type="afn:PressureQuantityType"/>
-                  <xs:element name="State" type="afn:AirStateType" minOccurs="0"/>
-                </xs:sequence>
-              </xs:complexType>
-            </xs:element>
-          </xs:sequence>
-        </xs:complexType>
-      </xs:element>
-    </xs:sequence>
-    <xs:attribute name="ID" type="xs:ID">
-      <xs:annotation>
-        <xs:documentation>Name of power law element, must be unique</xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-  </xs:complexType>
-  <xs:complexType name="ComisDetailedOpeningType">
-    <xs:sequence>
-      <xs:element name="Description" type="xs:string" minOccurs="0">
-        <xs:annotation>
-          <xs:documentation>Description of the detailed opening element</xs:documentation>
-        </xs:annotation>
-      </xs:element>
-      <xs:element name="Coefficient">
-        <xs:annotation>
-          <xs:documentation>Flow coefficient when the opening is closed</xs:documentation>
-        </xs:annotation>
-        <xs:simpleType>
-          <xs:restriction base="xs:double">
-            <xs:minExclusive value="0.0"/>
-          </xs:restriction>
-        </xs:simpleType>
-      </xs:element>
-      <xs:element name="Exponent" minOccurs="0">
-        <xs:annotation>
-          <xs:documentation>Flow exponent when the opening is closed, defaults to 0.65</xs:documentation>
-        </xs:annotation>
-        <xs:simpleType>
-          <xs:restriction base="xs:double">
-            <xs:minInclusive value="0.5"/>
-            <xs:maxInclusive value="1.0"/>
-          </xs:restriction>
-        </xs:simpleType>
-      </xs:element>
-      <xs:element name="OpeningType" minOccurs="0">
-        <xs:annotation>
-          <xs:documentation>Type of opening, defaults to NonPivoted</xs:documentation>
-        </xs:annotation>
-        <xs:simpleType>
-          <xs:restriction base="xs:string">
-            <xs:enumeration value="NonPivoted"/>
-            <xs:enumeration value="HorizontallyPivoted"/>
-          </xs:restriction>
-        </xs:simpleType>
-      </xs:element>
-      <xs:element name="ExtraCrackLengthOrHeightOfPivotingAxis" minOccurs="0">
-        <xs:annotation>
-          <xs:documentation>Extra crack length or the height of the pivoting axis [m], defaults to 0</xs:documentation>
-        </xs:annotation>
-        <xs:simpleType>
-          <xs:restriction base="xs:double">
-            <xs:minExclusive value="0.0"/>
-          </xs:restriction>
-        </xs:simpleType>
-      </xs:element>
-      <xs:element name="OpeningFactors" type="afn:OpeningFactorsType" minOccurs="2" maxOccurs="4"/>
-    </xs:sequence>
-    <xs:attribute name="ID" type="xs:ID">
-      <xs:annotation>
-        <xs:documentation>Name of power law element, must be unique</xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-  </xs:complexType>
-  <xs:complexType name="AirStateType">
-    <xs:sequence>
-      <xs:element name="Description" type="xs:string" minOccurs="0">
-        <xs:annotation>
-          <xs:documentation>Description of the air state</xs:documentation>
-        </xs:annotation>
-      </xs:element>
-      <xs:choice>
+    <xs:complexType name="ComisDetailedOpeningType">
         <xs:sequence>
-          <xs:element name="Temperature" type="afn:TemperatureQuantityType" minOccurs="1"/>
-          <xs:element name="Pressure" type="afn:PressureQuantityType" minOccurs="0"/>
+            <xs:element name="Description" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Description of the detailed opening element</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Coefficient">
+                <xs:annotation>
+                    <xs:documentation>Flow coefficient when the opening is closed</xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                    <xs:restriction base="xs:double">
+                        <xs:minExclusive value="0.0"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="Exponent" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Flow exponent when the opening is closed, defaults to 0.65</xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                    <xs:restriction base="xs:double">
+                        <xs:minInclusive value="0.5"/>
+                        <xs:maxInclusive value="1.0"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="OpeningType" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Type of opening, defaults to NonPivoted</xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:enumeration value="NonPivoted"/>
+                        <xs:enumeration value="HorizontallyPivoted"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="ExtraCrackLengthOrHeightOfPivotingAxis" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Extra crack length or the height of the pivoting axis [m], defaults to 0</xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                    <xs:restriction base="xs:double">
+                        <xs:minExclusive value="0.0"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="OpeningFactors" type="afn:OpeningFactorsType" minOccurs="2" maxOccurs="4"/>
         </xs:sequence>
+        <xs:attribute name="ID" type="xs:ID" use="required">
+            <xs:annotation>
+                <xs:documentation>Name of detailed opening element, must be unique</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="MaterialType">
+        <xs:annotation>
+            <xs:documentation>A material that is transported by the flow network</xs:documentation>
+        </xs:annotation>
         <xs:sequence>
-          <xs:element name="Pressure" type="afn:PressureQuantityType" minOccurs="1"/>
+            <xs:element name="MolarMass" type="afn:PositiveValueType" minOccurs="0"/>
+            <xs:element name="Density" type="afn:DensityQuantityType" minOccurs="0"/>
+            <xs:element name="SpecificHeat" type="afn:SpecificHeatQuantityType" minOccurs="0"/>
+            <xs:element name="AmbientConcentration" type="afn:ConcentrationQuantityType"/>
+            <xs:element name="NonTrace" minOccurs="0"/>
         </xs:sequence>
-      </xs:choice>
-      <xs:element name="HumidityRatio" minOccurs="0">
-        <xs:simpleType>
-          <xs:restriction base="xs:double">
-            <xs:minInclusive value="0.0"/>
-          </xs:restriction>
-        </xs:simpleType>
-      </xs:element>
-    </xs:sequence>
-    <xs:attribute name="ID" type="xs:ID">
-      <xs:annotation>
-        <xs:documentation>Name of air state, must be unique</xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-  </xs:complexType>
-  <xs:complexType name="OpeningFactorsType">
-    <xs:sequence>
-      <xs:element name="OpeningFraction">
+        <xs:attribute name="ID" type="xs:ID" use="required">
+            <xs:annotation>
+                <xs:documentation>Name of material, must be unique</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="MaterialRemovalEfficiencyType">
         <xs:annotation>
-          <xs:documentation>The fraction that the window or door is open</xs:documentation>
+            <xs:documentation>A removal efficiency of a specific material</xs:documentation>
         </xs:annotation>
-        <xs:simpleType>
-          <xs:restriction base="xs:double">
-            <xs:minInclusive value="0.0"/>
-          </xs:restriction>
-        </xs:simpleType>
-      </xs:element>
-      <xs:element name="DischargeCoefficient" minOccurs="0">
-        <xs:annotation>
-          <xs:documentation>The fractional effectiveness for air flow through the opening at this opening factor, defaults to 0.001</xs:documentation>
-        </xs:annotation>
-        <xs:simpleType>
-          <xs:restriction base="xs:double">
-            <xs:minExclusive value="0.0"/>
-            <xs:maxInclusive value="1.0"/>
-          </xs:restriction>
-        </xs:simpleType>
-      </xs:element>
-      <xs:element name="WidthFactor" minOccurs="0">
-        <xs:annotation>
-          <xs:documentation>The opening width divided by the window or door width, defaults to 0</xs:documentation>
-        </xs:annotation>
-        <xs:simpleType>
-          <xs:restriction base="xs:double">
-            <xs:minInclusive value="0.0"/>
-            <xs:maxInclusive value="1.0"/>
-          </xs:restriction>
-        </xs:simpleType>
-      </xs:element>
-      <xs:element name="HeightFactor" minOccurs="0">
-        <xs:annotation>
-          <xs:documentation>The opening height divided by the window or door height, defaults to 0</xs:documentation>
-        </xs:annotation>
-        <xs:simpleType>
-          <xs:restriction base="xs:double">
-            <xs:minInclusive value="0.0"/>
-            <xs:maxInclusive value="1.0"/>
-          </xs:restriction>
-        </xs:simpleType>
-      </xs:element>
-      <xs:element name="StartHeightFactor" minOccurs="0">
-        <xs:annotation>
-          <xs:documentation>The Start Height divided by the window or door height. Start Height is the distance between the bottom of the window or door and the bottom of the window or door opening. The sum of the Height Factor and the Start Height Factor must be less than 1.0 in order to have the opening within the window or door dimensions. Defaults to 0.0</xs:documentation>
-        </xs:annotation>
-        <xs:simpleType>
-          <xs:restriction base="xs:double">
-            <xs:minInclusive value="0.0"/>
-            <xs:maxInclusive value="1.0"/>
-          </xs:restriction>
-        </xs:simpleType>
-      </xs:element>
-    </xs:sequence>
-  </xs:complexType>
-  <xs:complexType name="NodeType">
-    <xs:sequence>
-      <xs:element name="Description" type="xs:string" minOccurs="0">
-        <xs:annotation>
-          <xs:documentation>Description of the node</xs:documentation>
-        </xs:annotation>
-      </xs:element>
-      <xs:element name="PressureHandling" minOccurs="0">
-        <xs:annotation>
-          <xs:documentation>Handling of pressure at this node, defaults to Variable</xs:documentation>
-        </xs:annotation>
-        <xs:simpleType>
-          <xs:restriction base="xs:string">
-            <xs:enumeration value="Simulated">
-              <xs:annotation>
-                <xs:documentation>Pressure is computed from the pressure network simlation</xs:documentation>
-              </xs:annotation>
-            </xs:enumeration>
-            <xs:enumeration value="Fixed">
-              <xs:annotation>
-                <xs:documentation>Pressure is fixed and never changes</xs:documentation>
-              </xs:annotation>
-            </xs:enumeration>
-            <xs:enumeration value="Calculated">
-              <xs:annotation>
-                <xs:documentation>Pressure is calculated from parameters that may change during the simulation</xs:documentation>
-              </xs:annotation>
-            </xs:enumeration>
-          </xs:restriction>
-        </xs:simpleType>
-      </xs:element>
-      <xs:element name="Volume" minOccurs="0">
-        <xs:annotation>
-          <xs:documentation>The volume associated with the node</xs:documentation>
-        </xs:annotation>
-        <xs:complexType>
-          <xs:choice>
-            <xs:element name="SpecifiedVolume" type="afn:VolumeQuantityType">
-              <xs:annotation>
-                <xs:documentation>The volume associated with the node</xs:documentation>
-              </xs:annotation>
-            </xs:element>
-            <xs:element name="ComputedVolume">
-              <xs:annotation>
-                <xs:documentation>The volume with the node in precomputated form</xs:documentation>
-              </xs:annotation>
-              <xs:complexType>
-                <xs:choice>
-                  <xs:element name="Dimensions">
-                    <xs:complexType>
-                      <xs:sequence>
-                        <xs:element name="Length" type="afn:LengthQuantityType"/>
-                        <xs:element name="Width" type="afn:LengthQuantityType"/>
-                        <xs:element name="Height" type="afn:LengthQuantityType"/>
-                      </xs:sequence>
-                    </xs:complexType>
-                  </xs:element>
-                  <xs:element name="AreaAndHeight">
-                    <xs:complexType>
-                      <xs:sequence>
-                        <xs:element name="Area" type="afn:AreaQuantityType"/>
-                        <xs:element name="Height" type="afn:LengthQuantityType"/>
-                      </xs:sequence>
-                    </xs:complexType>
-                  </xs:element>
-                  <xs:element name="AreaAndInheritedHeight" type="afn:AreaQuantityType"/>
-                </xs:choice>
-              </xs:complexType>
-            </xs:element>
-          </xs:choice>
-        </xs:complexType>
-      </xs:element>
-      <xs:element name="RelativeElevation" type="afn:LengthQuantityType" minOccurs="0">
-        <xs:annotation>
-          <xs:documentation>Elevation of the node relative to the node's level</xs:documentation>
-        </xs:annotation>
-      </xs:element>
-      <xs:element name="DefaultState" type="afn:AirStateType" minOccurs="0"/>
-      <xs:element name="LevelID" minOccurs="0">
-        <xs:annotation>
-          <xs:documentation>Name of the level on which this node is located</xs:documentation>
-        </xs:annotation>
-        <xs:complexType>
-          <xs:attribute name="IDref" type="xs:IDREF" use="required"/>
-        </xs:complexType>
-      </xs:element>
-    </xs:sequence>
-    <xs:attribute name="ID" type="xs:ID">
-      <xs:annotation>
-        <xs:documentation>Name of node, must be unique</xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-  </xs:complexType>
-  <xs:complexType name="LinkType">
-    <xs:sequence>
-      <xs:element name="Description" type="xs:string" minOccurs="0">
-        <xs:annotation>
-          <xs:documentation>Description of the link</xs:documentation>
-        </xs:annotation>
-      </xs:element>
-      <xs:element name="ElementID">
-        <xs:annotation>
-          <xs:documentation>ID of linked element</xs:documentation>
-        </xs:annotation>
-        <xs:complexType>
-          <xs:attribute name="IDref" type="xs:IDREF" use="required"/>
-        </xs:complexType>
-      </xs:element>
-      <xs:element name="Multiplier" minOccurs="0">
-        <xs:annotation>
-          <xs:documentation>Link multipler [-], defaults to 1</xs:documentation>
-        </xs:annotation>
-        <xs:simpleType>
-          <xs:restriction base="xs:double">
-            <xs:minExclusive value="0.0"/>
-          </xs:restriction>
-        </xs:simpleType>
-      </xs:element>
-      <xs:element name="Nodes">
-        <xs:annotation>
-          <xs:documentation>The set of two nodes that are connected by link</xs:documentation>
-        </xs:annotation>
-        <xs:complexType>
-          <xs:sequence>
-            <xs:element name="Node" minOccurs="2" maxOccurs="2">
-              <xs:annotation>
-                <xs:documentation>Node connection information</xs:documentation>
-              </xs:annotation>
-              <xs:complexType>
-                <xs:sequence>
-                  <xs:element name="NodeID">
+        <xs:simpleContent>
+            <xs:extension base="afn:PositiveUnityFractionType">
+                <xs:attribute name="IDref" type="xs:IDREF" use="required">
                     <xs:annotation>
-                      <xs:documentation>ID of linked node</xs:documentation>
+                        <xs:documentation>ID of material to be removed</xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <!-- Filter Elements -->
+    <xs:complexType name="SimpleFilterType">
+        <xs:annotation>
+            <xs:documentation>Simple filter component, with only a specified removal efficiency</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="Description" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Description of the model</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="RemovalEfficiencies">
+                <xs:annotation>
+                    <xs:documentation>Simple filter component, with only a specified removal efficiency</xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="RemovalEfficiency" type="afn:MaterialRemovalEfficiencyType" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="ID" type="xs:ID" use="required">
+            <xs:annotation>
+                <xs:documentation>Name of the simple filter, must be unique</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <!-- Sources and Sinks -->
+    <xs:complexType name="ScheduledSourceType">
+        <xs:annotation>
+            <xs:documentation>A simple scheduled source of material</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="MaterialID">
+                <xs:annotation>
+                    <xs:documentation>ID of material to be added</xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                    <xs:attribute name="IDref" type="xs:IDREF" use="required"/>
+                </xs:complexType>
+            </xs:element>
+            <xs:choice>
+                <xs:element name="MassScheduleID">
+                    <xs:annotation>
+                        <xs:documentation>ID of schedule of mass to be added</xs:documentation>
                     </xs:annotation>
                     <xs:complexType>
-                      <xs:attribute name="IDref" type="xs:IDREF" use="required"/>
+                        <xs:attribute name="IDref" type="xs:IDREF" use="required"/>
                     </xs:complexType>
-                  </xs:element>
-                  <xs:element name="RelativeHeight" type="afn:LengthQuantityType" minOccurs="0">
+                </xs:element>
+                <xs:element name="MassFlowScheduleID">
                     <xs:annotation>
-                      <xs:documentation>Height of the link relative to the node [m], defaults to 0</xs:documentation>
+                        <xs:documentation>ID of schedule of mass flow to used to add material</xs:documentation>
                     </xs:annotation>
-                  </xs:element>
-                </xs:sequence>
-              </xs:complexType>
+                    <xs:complexType>
+                        <xs:attribute name="IDref" type="xs:IDREF" use="required"/>
+                    </xs:complexType>
+                </xs:element>
+            </xs:choice>
+        </xs:sequence>
+        <xs:attribute name="ID" type="xs:ID" use="required">
+            <xs:annotation>
+                <xs:documentation>Name of the scheduled source, must be unique</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="ConstantCoefficentSourceSinkType">
+        <xs:annotation>
+            <xs:documentation>A simple constant coefficient source/sink of material</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="MaterialID">
+                <xs:annotation>
+                    <xs:documentation>ID of material to be added</xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                    <xs:attribute name="IDref" type="xs:IDREF" use="required"/>
+                </xs:complexType>
             </xs:element>
-          </xs:sequence>
-        </xs:complexType>
-      </xs:element>
-    </xs:sequence>
-    <xs:attribute name="ID" type="xs:ID">
-      <xs:annotation>
-        <xs:documentation>Name of link, must be unique</xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-  </xs:complexType>
-  <xs:complexType name="LevelType">
-    <xs:sequence>
-      <xs:element name="Height" type="afn:LengthQuantityType">
+            <xs:sequence>
+                <xs:element name="GenerationRate">
+                    <xs:annotation>
+                        <xs:documentation>The source generation rate</xs:documentation>
+                    </xs:annotation>
+                    <xs:complexType>
+                        <xs:simpleContent>
+                            <xs:extension base="afn:NonNegativeValueType">
+                                <xs:attribute name="units" type="afn:MassFlowUnitsEnum" use="required"/>
+                            </xs:extension>
+                        </xs:simpleContent>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+            <xs:choice>
+                <xs:element name="MassScheduleID">
+                    <xs:annotation>
+                        <xs:documentation>ID of schedule of mass to be added</xs:documentation>
+                    </xs:annotation>
+                    <xs:complexType>
+                        <xs:attribute name="IDref" type="xs:IDREF" use="required"/>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="MassFlowScheduleID">
+                    <xs:annotation>
+                        <xs:documentation>ID of schedule of mass flow to used to add material</xs:documentation>
+                    </xs:annotation>
+                    <xs:complexType>
+                        <xs:attribute name="IDref" type="xs:IDREF" use="required"/>
+                    </xs:complexType>
+                </xs:element>
+            </xs:choice>
+        </xs:sequence>
+        <xs:attribute name="ID" type="xs:ID" use="required">
+            <xs:annotation>
+                <xs:documentation>Name of the source/sink, must be unique</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <!-- General Model Types -->
+    <xs:complexType name="AirStateType">
+        <xs:sequence>
+            <xs:element name="Description" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Description of the air state</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:choice>
+                <xs:sequence>
+                    <xs:element name="Temperature" type="afn:TemperatureQuantityType" minOccurs="1"/>
+                    <xs:element name="Pressure" type="afn:PressureQuantityType" minOccurs="0"/>
+                </xs:sequence>
+                <xs:sequence>
+                    <xs:element name="Pressure" type="afn:PressureQuantityType" minOccurs="1"/>
+                </xs:sequence>
+            </xs:choice>
+            <xs:element name="HumidityRatio" minOccurs="0">
+                <xs:simpleType>
+                    <xs:restriction base="xs:double">
+                        <xs:minInclusive value="0.0"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="ID" type="xs:ID">
+            <xs:annotation>
+                <xs:documentation>Name of air state, must be unique</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="OpeningFactorsType">
+        <xs:sequence>
+            <xs:element name="OpeningFraction">
+                <xs:annotation>
+                    <xs:documentation>The fraction that the window or door is open</xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                    <xs:restriction base="xs:double">
+                        <xs:minInclusive value="0.0"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="DischargeCoefficient" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>The fractional effectiveness for air flow through the opening at this opening factor, defaults to 0.001</xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                    <xs:restriction base="xs:double">
+                        <xs:minExclusive value="0.0"/>
+                        <xs:maxInclusive value="1.0"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="WidthFactor" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>The opening width divided by the window or door width, defaults to 0</xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                    <xs:restriction base="xs:double">
+                        <xs:minInclusive value="0.0"/>
+                        <xs:maxInclusive value="1.0"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="HeightFactor" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>The opening height divided by the window or door height, defaults to 0</xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                    <xs:restriction base="xs:double">
+                        <xs:minInclusive value="0.0"/>
+                        <xs:maxInclusive value="1.0"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="StartHeightFactor" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>The Start Height divided by the window or door height. Start Height is the distance between the bottom of the window or door and the bottom of the window or door opening. The sum of the Height Factor and the Start Height Factor must be less than 1.0 in order to have the opening within the window or door dimensions. Defaults to 0.0</xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                    <xs:restriction base="xs:double">
+                        <xs:minInclusive value="0.0"/>
+                        <xs:maxInclusive value="1.0"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="NodeType">
+        <xs:sequence>
+            <xs:element name="Description" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Description of the node</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="PressureHandling" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Handling of pressure at this node, defaults to Variable</xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:enumeration value="Simulated">
+                            <xs:annotation>
+                                <xs:documentation>Pressure is computed from the pressure network simlation</xs:documentation>
+                            </xs:annotation>
+                        </xs:enumeration>
+                        <xs:enumeration value="Fixed">
+                            <xs:annotation>
+                                <xs:documentation>Pressure is fixed and never changes</xs:documentation>
+                            </xs:annotation>
+                        </xs:enumeration>
+                        <xs:enumeration value="Calculated">
+                            <xs:annotation>
+                                <xs:documentation>Pressure is calculated from parameters that may change during the simulation</xs:documentation>
+                            </xs:annotation>
+                        </xs:enumeration>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="Volume" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>The volume associated with the node</xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                    <xs:choice>
+                        <xs:element name="SpecifiedVolume" type="afn:VolumeQuantityType">
+                            <xs:annotation>
+                                <xs:documentation>The volume associated with the node</xs:documentation>
+                            </xs:annotation>
+                        </xs:element>
+                        <xs:element name="ComputedVolume">
+                            <xs:annotation>
+                                <xs:documentation>The volume with the node in precomputated form</xs:documentation>
+                            </xs:annotation>
+                            <xs:complexType>
+                                <xs:choice>
+                                    <xs:element name="Dimensions">
+                                        <xs:complexType>
+                                            <xs:sequence>
+                                                <xs:element name="Length" type="afn:LengthQuantityType"/>
+                                                <xs:element name="Width" type="afn:LengthQuantityType"/>
+                                                <xs:element name="Height" type="afn:LengthQuantityType"/>
+                                            </xs:sequence>
+                                        </xs:complexType>
+                                    </xs:element>
+                                    <xs:element name="AreaAndHeight">
+                                        <xs:complexType>
+                                            <xs:sequence>
+                                                <xs:element name="Area" type="afn:AreaQuantityType"/>
+                                                <xs:element name="Height" type="afn:LengthQuantityType"/>
+                                            </xs:sequence>
+                                        </xs:complexType>
+                                    </xs:element>
+                                    <xs:element name="AreaAndInheritedHeight" type="afn:AreaQuantityType"/>
+                                </xs:choice>
+                            </xs:complexType>
+                        </xs:element>
+                    </xs:choice>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="RelativeElevation" type="afn:LengthQuantityType" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Elevation of the node relative to the node's level</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="DefaultState" type="afn:AirStateType" minOccurs="0"/>
+            <xs:element name="LevelID" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Name of the level on which this node is located</xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                    <xs:attribute name="IDref" type="xs:IDREF" use="required"/>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="ID" type="xs:ID" use="required">
+            <xs:annotation>
+                <xs:documentation>Name of node, must be unique</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="LinkType">
+        <xs:sequence>
+            <xs:element name="Description" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Description of the link</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ElementID">
+                <xs:annotation>
+                    <xs:documentation>ID of linked element</xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                    <xs:attribute name="IDref" type="xs:IDREF" use="required"/>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="ElementScheduleID" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>ID of linked element schedule</xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                    <xs:attribute name="IDref" type="xs:IDREF" use="required"/>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="FilterID" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>ID of linked filter</xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                    <xs:attribute name="IDref" type="xs:IDREF" use="required"/>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="FilterScheduleID" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>ID of linked filter schedule</xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                    <xs:attribute name="IDref" type="xs:IDREF" use="required"/>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="Multiplier" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Link multipler [-], defaults to 1</xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                    <xs:restriction base="xs:double">
+                        <xs:minExclusive value="0.0"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="Nodes">
+                <xs:annotation>
+                    <xs:documentation>The set of two nodes that are connected by link</xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Node" minOccurs="2" maxOccurs="2">
+                            <xs:annotation>
+                                <xs:documentation>Node connection information</xs:documentation>
+                            </xs:annotation>
+                            <xs:complexType>
+                                <xs:sequence>
+                                    <xs:element name="NodeID">
+                                        <xs:annotation>
+                                            <xs:documentation>ID of linked node</xs:documentation>
+                                        </xs:annotation>
+                                        <xs:complexType>
+                                            <xs:attribute name="IDref" type="xs:IDREF" use="required"/>
+                                        </xs:complexType>
+                                    </xs:element>
+                                    <xs:element name="RelativeHeight" type="afn:LengthQuantityType" minOccurs="0">
+                                        <xs:annotation>
+                                            <xs:documentation>Height of the link relative to the node [m], defaults to 0</xs:documentation>
+                                        </xs:annotation>
+                                    </xs:element>
+                                </xs:sequence>
+                            </xs:complexType>
+                        </xs:element>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="ID" type="xs:ID" use="required">
+            <xs:annotation>
+                <xs:documentation>Name of link, must be unique</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="LevelType">
+        <xs:sequence>
+            <xs:element name="Height" type="afn:LengthQuantityType">
+                <xs:annotation>
+                    <xs:documentation>Distance between the floor of this level and its ceiling</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Elevation" type="afn:LengthQuantityType">
+                <xs:annotation>
+                    <xs:documentation>Elevation of the level</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="ID" type="xs:ID" use="required">
+            <xs:annotation>
+                <xs:documentation>Name of level, must be unique</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:simpleType name="PositiveUnityFractionType">
         <xs:annotation>
-          <xs:documentation>Distance between the floor of this level and its ceiling</xs:documentation>
+            <xs:documentation>A fractional value between zero and one</xs:documentation>
         </xs:annotation>
-      </xs:element>
-      <xs:element name="Elevation" type="afn:LengthQuantityType">
+        <xs:restriction base="xs:double">
+            <xs:minInclusive value="0"/>
+            <xs:maxInclusive value="1"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="NonNegativeValueType">
         <xs:annotation>
-          <xs:documentation>Elevation of the level</xs:documentation>
+            <xs:documentation>A value that is positive or zero</xs:documentation>
         </xs:annotation>
-      </xs:element>
-    </xs:sequence>
-    <xs:attribute name="ID" type="xs:ID">
-      <xs:annotation>
-        <xs:documentation>Name of level, must be unique</xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-  </xs:complexType>
-  <xs:simpleType name="AbsoluteQuantityType">
-    <xs:restriction base="xs:double">
-      <xs:minInclusive value="0"/>
-    </xs:restriction>
-  </xs:simpleType>
-  <xs:complexType name="LengthQuantityType">
-    <xs:annotation>
-      <xs:documentation>A length quantity with specified units</xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base="afn:AbsoluteQuantityType">
-        <xs:attribute name="units" use="required">
-          <xs:simpleType>
-            <xs:restriction base="xs:string">
-              <xs:enumeration value="m"/>
-              <xs:enumeration value="ft"/>
-            </xs:restriction>
-          </xs:simpleType>
-        </xs:attribute>
-      </xs:extension>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:complexType name="AreaQuantityType">
-    <xs:annotation>
-      <xs:documentation>An area quantity with specified units</xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base="afn:AbsoluteQuantityType">
-        <xs:attribute name="units" use="required">
-          <xs:simpleType>
-            <xs:restriction base="xs:string">
-              <xs:enumeration value="m^2"/>
-              <xs:enumeration value="ft^2"/>
-            </xs:restriction>
-          </xs:simpleType>
-        </xs:attribute>
-      </xs:extension>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:complexType name="VolumeQuantityType">
-    <xs:annotation>
-      <xs:documentation>A volume quantity with specified units</xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base="afn:AbsoluteQuantityType">
-        <xs:attribute name="units" use="required">
-          <xs:simpleType>
-            <xs:restriction base="xs:string">
-              <xs:enumeration value="m^3"/>
-              <xs:enumeration value="ft^3"/>
-            </xs:restriction>
-          </xs:simpleType>
-        </xs:attribute>
-      </xs:extension>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:simpleType name="PressureUnitsEnum">
-    <xs:restriction base="xs:string">
-      <xs:enumeration value="Pa"/>
-      <xs:enumeration value="psi"/>
-      <xs:enumeration value="Pag"/>
-      <xs:enumeration value="psig"/>
-      <xs:enumeration value="atm"/>
-      <xs:enumeration value="inches water"/>
-      <xs:enumeration value="inches Hg"/>
-    </xs:restriction>
-  </xs:simpleType>
-  <xs:complexType name="PressureQuantityType">
-    <xs:annotation>
-      <xs:documentation>A pressure quantity with specified units</xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base="xs:double">
-        <xs:attribute name="units" type="afn:PressureUnitsEnum" use="required"/>
-      </xs:extension>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:complexType name="TemperatureQuantityType">
-    <xs:annotation>
-      <xs:documentation>A temperature quantity with specified units</xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base="afn:AbsoluteQuantityType">
-        <xs:attribute name="units" use="required">
-          <xs:simpleType>
-            <xs:restriction base="xs:string">
-              <xs:enumeration value="K"/>
-              <xs:enumeration value="R"/>
-              <xs:enumeration value="C"/>
-              <xs:enumeration value="F"/>
-            </xs:restriction>
-          </xs:simpleType>
-        </xs:attribute>
-      </xs:extension>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:complexType name="VolumeFlowRateQuantityType">
-    <xs:annotation>
-      <xs:documentation>A volume flow rate quantity with specified units</xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base="afn:AbsoluteQuantityType">
-        <xs:attribute name="units" use="required">
-          <xs:simpleType>
-            <xs:restriction base="xs:string">
-              <xs:enumeration value="kg/s"/>
-              <xs:enumeration value="lb/s"/>
-            </xs:restriction>
-          </xs:simpleType>
-        </xs:attribute>
-      </xs:extension>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:simpleType name="MassFlowUnitsEnum">
-    <xs:restriction base="xs:string">
-      <xs:enumeration value="kg/s"/>
-      <xs:enumeration value="lb/s"/>
-    </xs:restriction>
-  </xs:simpleType>
-  <xs:complexType name="MassFlowRateQuantityType">
-    <xs:annotation>
-      <xs:documentation>A mass flow rate quantity with specified units</xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base="afn:AbsoluteQuantityType">
-        <xs:attribute name="units" type="afn:MassFlowUnitsEnum" use="required"/>
-      </xs:extension>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:complexType name="FlowRateQuantityType">
-    <xs:choice>
-      <xs:element name="MassFlowRate" type="afn:VolumeFlowRateQuantityType"/>
-      <xs:element name="VolumeFlowRate" type="afn:MassFlowRateQuantityType"/>
-    </xs:choice>
-  </xs:complexType>
-  <xs:complexType name="DurationQuantityType">
-    <xs:annotation>
-      <xs:documentation>A mass flow rate quantity with specified units</xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base="afn:AbsoluteQuantityType">
-        <xs:attribute name="units" use="required">
-          <xs:simpleType>
-            <xs:restriction base="xs:string">
-              <xs:enumeration value="s"/>
-              <xs:enumeration value="min"/>
-              <xs:enumeration value="hr"/>
-              <xs:enumeration value="day"/>
-              <xs:enumeration value="week"/>
-              <xs:enumeration value="month"/>
-              <xs:enumeration value="year"/>
-            </xs:restriction>
-          </xs:simpleType>
-        </xs:attribute>
-      </xs:extension>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:complexType name="FlowResultType">
-    <xs:sequence>
-      <xs:element name="DateTime" type="xs:dateTime" minOccurs="0">
+        <xs:restriction base="xs:double">
+            <xs:minInclusive value="0"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="PositiveValueType">
         <xs:annotation>
-          <xs:documentation>Timestamp associated with the results (CCYY-MM-DDThh:mm:ss.zzz)</xs:documentation>
+            <xs:documentation>A positive value (excluding zero)</xs:documentation>
         </xs:annotation>
-      </xs:element>
-      <xs:element name="Time" type="afn:DurationQuantityType">
+        <xs:restriction base="xs:double">
+            <xs:minExclusive value="0"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <!-- Unit Enumerations -->
+    <xs:simpleType name="LengthUnitsEnum">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="m"/>
+            <xs:enumeration value="cm"/>
+            <xs:enumeration value="ft"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="AreaUnitsEnum">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="m^2"/>
+            <xs:enumeration value="cm^2"/>
+            <xs:enumeration value="ft^2"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="VolumeUnitsEnum">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="m^3"/>
+            <xs:enumeration value="cm^3"/>
+            <xs:enumeration value="ft^3"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="MassUnitsEnum">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="kg"/>
+            <xs:enumeration value="g"/>
+            <xs:enumeration value="lbm"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="DensityUnitsEnum">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="kg/m^3"/>
+            <xs:enumeration value="lbm/ft^3"/>
+            <xs:enumeration value="g/cm^3"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="ConcentrationUnitsEnum">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="kg/kg"/>
+            <xs:enumeration value="kg/m^3"/>
+            <xs:enumeration value="lbm/ft^3"/>
+            <xs:enumeration value="lbm/lbm"/>
+            <xs:enumeration value="ppm"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="PressureUnitsEnum">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Pa"/>
+            <xs:enumeration value="psi"/>
+            <xs:enumeration value="Pag"/>
+            <xs:enumeration value="psig"/>
+            <xs:enumeration value="atm"/>
+            <xs:enumeration value="inches water"/>
+            <xs:enumeration value="inches Hg"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="TemperatureUnitsEnum">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="K"/>
+            <xs:enumeration value="R"/>
+            <xs:enumeration value="C"/>
+            <xs:enumeration value="F"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="VolumeFlowUnitsEnum">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="m^3/s"/>
+            <xs:enumeration value="ft^3/s"/>
+            <xs:enumeration value="ft^3/min"/>
+            <xs:enumeration value="cfm"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="MassFlowUnitsEnum">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="kg/s"/>
+            <xs:enumeration value="lb/s"/>
+            <xs:enumeration value="scfm"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="TimeUnitsEnum">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="s"/>
+            <xs:enumeration value="min"/>
+            <xs:enumeration value="hr"/>
+            <xs:enumeration value="day"/>
+            <xs:enumeration value="week"/>
+            <xs:enumeration value="month"/>
+            <xs:enumeration value="year"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="SpecificHeatUnitsEnum">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="J/(kg K)"/>
+            <xs:enumeration value="kJ/(kg K)"/>
+            <xs:enumeration value="Btu/lbf"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="AllTheUnitsEnum">
+        <xs:union memberTypes="afn:LengthUnitsEnum afn:AreaUnitsEnum afn:VolumeUnitsEnum afn:DensityUnitsEnum afn:ConcentrationUnitsEnum afn:PressureUnitsEnum afn:TemperatureUnitsEnum afn:VolumeFlowUnitsEnum afn:MassFlowUnitsEnum afn:TimeUnitsEnum afn:SpecificHeatUnitsEnum"/>
+    </xs:simpleType>
+    <!-- Quantities -->
+    <xs:complexType name="LengthQuantityType">
         <xs:annotation>
-          <xs:documentation>Time duration associated with the results</xs:documentation>
+            <xs:documentation>A length quantity with specified units</xs:documentation>
         </xs:annotation>
-      </xs:element>
-      <xs:element name="Flows">
-        <xs:complexType>
-          <xs:sequence>
-            <xs:element name="Flow" type="afn:FlowType"/>
-          </xs:sequence>
-          <xs:attribute name="units" type="afn:MassFlowUnitsEnum" use="required"/>
-        </xs:complexType>
-      </xs:element>
-    </xs:sequence>
-  </xs:complexType>
-  <xs:complexType name="FlowType">
-    <xs:annotation>
-      <xs:documentation>A mass flow rate quantity with specified units</xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base="xs:decimal">
-        <xs:attribute name="IDref" type="xs:IDREF" use="required">
-          <xs:annotation>
-            <xs:documentation>ID of associated link or element</xs:documentation>
-          </xs:annotation>
+        <xs:simpleContent>
+            <xs:extension base="afn:NonNegativeValueType">
+                <xs:attribute name="units" type="afn:LengthUnitsEnum" use="required"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="AreaQuantityType">
+        <xs:annotation>
+            <xs:documentation>An area quantity with specified units</xs:documentation>
+        </xs:annotation>
+        <xs:simpleContent>
+            <xs:extension base="afn:NonNegativeValueType">
+                <xs:attribute name="units" type="afn:AreaUnitsEnum" use="required"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="VolumeQuantityType">
+        <xs:annotation>
+            <xs:documentation>A volume quantity with specified units</xs:documentation>
+        </xs:annotation>
+        <xs:simpleContent>
+            <xs:extension base="afn:NonNegativeValueType">
+                <xs:attribute name="units" type="afn:VolumeUnitsEnum" use="required"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="DensityQuantityType">
+        <xs:annotation>
+            <xs:documentation>A density quantity with specified units</xs:documentation>
+        </xs:annotation>
+        <xs:simpleContent>
+            <xs:extension base="afn:PositiveValueType">
+                <xs:attribute name="units" type="afn:DensityUnitsEnum" use="required"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="ConcentrationQuantityType">
+        <xs:annotation>
+            <xs:documentation>A concentration quantity with specified units</xs:documentation>
+        </xs:annotation>
+        <xs:simpleContent>
+            <xs:extension base="afn:NonNegativeValueType">
+                <xs:attribute name="units" type="afn:ConcentrationUnitsEnum" use="required"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="PressureQuantityType">
+        <xs:annotation>
+            <xs:documentation>A pressure quantity with specified units</xs:documentation>
+        </xs:annotation>
+        <xs:simpleContent>
+            <xs:extension base="xs:double">
+                <xs:attribute name="units" type="afn:PressureUnitsEnum" use="required"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="TemperatureQuantityType">
+        <xs:annotation>
+            <xs:documentation>A temperature quantity with specified units</xs:documentation>
+        </xs:annotation>
+        <xs:simpleContent>
+            <xs:extension base="afn:NonNegativeValueType">
+                <xs:attribute name="units" type="afn:TemperatureUnitsEnum" use="required"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="VolumeFlowRateQuantityType">
+        <xs:annotation>
+            <xs:documentation>A volume flow rate quantity with specified units</xs:documentation>
+        </xs:annotation>
+        <xs:simpleContent>
+            <xs:extension base="afn:NonNegativeValueType">
+                <xs:attribute name="units" type="afn:VolumeFlowUnitsEnum" use="required"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="MassFlowRateQuantityType">
+        <xs:annotation>
+            <xs:documentation>A mass flow rate quantity with specified units</xs:documentation>
+        </xs:annotation>
+        <xs:simpleContent>
+            <xs:extension base="afn:NonNegativeValueType">
+                <xs:attribute name="units" type="afn:MassFlowUnitsEnum" use="required"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="FlowRateQuantityType">
+        <xs:choice>
+            <xs:element name="MassFlowRate" type="afn:VolumeFlowRateQuantityType"/>
+            <xs:element name="VolumeFlowRate" type="afn:MassFlowRateQuantityType"/>
+        </xs:choice>
+    </xs:complexType>
+    <xs:complexType name="DurationQuantityType">
+        <xs:annotation>
+            <xs:documentation>A time duration with specified units</xs:documentation>
+        </xs:annotation>
+        <xs:simpleContent>
+            <xs:extension base="afn:NonNegativeValueType">
+                <xs:attribute name="units" type="afn:TimeUnitsEnum" use="required"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="SpecificHeatQuantityType">
+        <xs:annotation>
+            <xs:documentation>A specific heat with specified units</xs:documentation>
+        </xs:annotation>
+        <xs:simpleContent>
+            <xs:extension base="afn:NonNegativeValueType">
+                <xs:attribute name="units" type="afn:SpecificHeatUnitsEnum" use="required"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="FlowResultType">
+        <xs:sequence>
+            <xs:element name="DateTime" type="xs:dateTime" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Timestamp associated with the results (CCYY-MM-DDThh:mm:ss.zzz)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Time" type="afn:DurationQuantityType">
+                <xs:annotation>
+                    <xs:documentation>Time duration associated with the results</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Flows">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Flow" type="afn:FlowType"/>
+                    </xs:sequence>
+                    <xs:attribute name="units" type="afn:MassFlowUnitsEnum" use="required"/>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="FlowType">
+        <xs:annotation>
+            <xs:documentation>A mass flow rate quantity with specified units</xs:documentation>
+        </xs:annotation>
+        <xs:simpleContent>
+            <xs:extension base="xs:decimal">
+                <xs:attribute name="IDref" type="xs:IDREF" use="required">
+                    <xs:annotation>
+                        <xs:documentation>ID of associated link or element</xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="PressureResultType">
+        <xs:sequence>
+            <xs:element name="DateTime" type="xs:dateTime" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Timestamp associated with the results (CCYY-MM-DDThh:mm:ss.zzz)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Time" type="afn:DurationQuantityType">
+                <xs:annotation>
+                    <xs:documentation>Time duration associated with the results</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Pressures">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Pressure" type="afn:PressureType"/>
+                    </xs:sequence>
+                    <xs:attribute name="units" type="afn:PressureUnitsEnum" use="required"/>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="PressureType">
+        <xs:annotation>
+            <xs:documentation>A pressure quantity with specified units</xs:documentation>
+        </xs:annotation>
+        <xs:simpleContent>
+            <xs:extension base="afn:PressureQuantityType">
+                <xs:attribute name="IDref" type="xs:IDREF" use="required">
+                    <xs:annotation>
+                        <xs:documentation>ID of associated node or element</xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:simpleType name="InterpolationEnum">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="None"/>
+            <xs:enumeration value="FromPrevious"/>
+            <xs:enumeration value="FromNext"/>
+            <xs:enumeration value="Linear"/>
+            <xs:enumeration value="CubicSpline"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:complexType name="TimeSeriesType">
+        <xs:annotation>
+            <xs:documentation>A series of datapoints and associated durations</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="Interpolation" type="afn:InterpolationEnum" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Specify how values between data points should be obtained</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="DataPoints">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="DataPoint" maxOccurs="unbounded">
+                            <xs:complexType>
+                                <xs:sequence>
+                                    <xs:element name="Time" type="afn:DurationQuantityType"/>
+                                    <xs:element name="Value" type="xs:double"/>
+                                </xs:sequence>
+                            </xs:complexType>
+                        </xs:element>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="ID" type="xs:ID" use="required">
+            <xs:annotation>
+                <xs:documentation>Name of series, must be unique</xs:documentation>
+            </xs:annotation>
         </xs:attribute>
-      </xs:extension>
-    </xs:simpleContent>
-  </xs:complexType>
-  <xs:complexType name="PressureResultType">
-    <xs:sequence>
-      <xs:element name="DateTime" type="xs:dateTime" minOccurs="0">
-        <xs:annotation>
-          <xs:documentation>Timestamp associated with the results (CCYY-MM-DDThh:mm:ss.zzz)</xs:documentation>
-        </xs:annotation>
-      </xs:element>
-      <xs:element name="Time" type="afn:DurationQuantityType">
-        <xs:annotation>
-          <xs:documentation>Time duration associated with the results</xs:documentation>
-        </xs:annotation>
-      </xs:element>
-      <xs:element name="Pressures">
-        <xs:complexType>
-          <xs:sequence>
-            <xs:element name="Pressure" type="afn:PressureType"/>
-          </xs:sequence>
-          <xs:attribute name="units" type="afn:PressureUnitsEnum" use="required"/>
-        </xs:complexType>
-      </xs:element>
-    </xs:sequence>
-  </xs:complexType>
-  <xs:complexType name="PressureType">
-    <xs:annotation>
-      <xs:documentation>A pressure quantity with specified units</xs:documentation>
-    </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base="xs:decimal">
-        <xs:attribute name="IDref" type="xs:IDREF" use="required">
-          <xs:annotation>
-            <xs:documentation>ID of associated node or element</xs:documentation>
-          </xs:annotation>
-        </xs:attribute>
-      </xs:extension>
-    </xs:simpleContent>
-  </xs:complexType>
+    </xs:complexType>
+    <xs:complexType name="TemperatureTimeSeriesType">
+        <xs:complexContent>
+            <xs:extension base="afn:TimeSeriesType">
+                <xs:attribute name="units" type="afn:TemperatureUnitsEnum"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="PressureTimeSeriesType">
+        <xs:complexContent>
+            <xs:extension base="afn:TimeSeriesType">
+                <xs:attribute name="units" type="afn:PressureUnitsEnum"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="ConcentrationTimeSeriesType">
+        <xs:complexContent>
+            <xs:extension base="afn:TimeSeriesType">
+                <xs:attribute name="units" type="afn:ConcentrationUnitsEnum"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="MassTimeSeriesType">
+        <xs:complexContent>
+            <xs:extension base="afn:TimeSeriesType">
+                <xs:attribute name="units" type="afn:MassUnitsEnum"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="MassFlowTimeSeriesType">
+        <xs:complexContent>
+            <xs:extension base="afn:TimeSeriesType">
+                <xs:attribute name="units" type="afn:MassFlowUnitsEnum"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
 </xs:schema>

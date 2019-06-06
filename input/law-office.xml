@@ -230,6 +230,19 @@
       </Data>
     </PowerLaw>
   </Elements>
+  <Materials>
+    <Material ID="CO2">
+      <AmbientConcentration units="ppm">400</AmbientConcentration>
+      <NonTrace/>
+    </Material>
+  </Materials>
+  <Filters>
+    <SimpleFilter ID="ActivatedCarbon">
+        <RemovalEfficiencies>
+            <RemovalEfficiency IDref="CO2">0.10</RemovalEfficiency>
+        </RemovalEfficiencies>
+    </SimpleFilter>
+  </Filters>
   <Levels>
     <Level ID="L1">
       <Height units="m">3.000</Height>
