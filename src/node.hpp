@@ -19,6 +19,7 @@ template <typename I, typename P> struct Node : State<P>
   double height;
   bool variable;
   I index;
+  std::vector<double> concentrations;
 };
 
 }

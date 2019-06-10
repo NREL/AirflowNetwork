@@ -29,11 +29,6 @@
                     </xs:annotation>
                     <xs:complexType>
                         <xs:sequence>
-                            <xs:element name="Description" type="xs:string" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>Description of the material</xs:documentation>
-                                </xs:annotation>
-                            </xs:element>
                             <xs:element name="Material" type="afn:MaterialType" minOccurs="1" maxOccurs="unbounded"/>
                         </xs:sequence>
                     </xs:complexType>
@@ -425,10 +420,19 @@
             <xs:documentation>A material that is transported by the flow network</xs:documentation>
         </xs:annotation>
         <xs:sequence>
+            <xs:element name="Description" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Description of the material</xs:documentation>
+                </xs:annotation>
+            </xs:element>
             <xs:element name="MolarMass" type="afn:PositiveValueType" minOccurs="0"/>
             <xs:element name="Density" type="afn:DensityQuantityType" minOccurs="0"/>
             <xs:element name="SpecificHeat" type="afn:SpecificHeatQuantityType" minOccurs="0"/>
-            <xs:element name="AmbientConcentration" type="afn:ConcentrationQuantityType"/>
+            <xs:element name="DefaultConcentration" type="afn:ConcentrationQuantityType">
+                <xs:annotation>
+                    <xs:documentation>Default concentration of the material, including for the ambient</xs:documentation>
+                </xs:annotation>
+            </xs:element>
             <xs:element name="NonTrace" minOccurs="0"/>
         </xs:sequence>
         <xs:attribute name="ID" type="xs:ID" use="required">
@@ -739,7 +743,7 @@
             <xs:element name="DefaultState" type="afn:AirStateType" minOccurs="0"/>
             <xs:element name="InitialConcentrations" minOccurs="0">
                 <xs:annotation>
-                    <xs:documentation>Initial concentrations of substances for this node</xs:documentation>
+                    <xs:documentation>Initial concentrations of materials for this node</xs:documentation>
                 </xs:annotation>
                 <xs:complexType>
                     <xs:sequence>
@@ -769,7 +773,7 @@
                     <xs:documentation>Description of the link</xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element name="ElementID" minOccurs="0">
+            <xs:element name="ElementID">
                 <xs:annotation>
                     <xs:documentation>ID of linked element</xs:documentation>
                 </xs:annotation>

@@ -36,8 +36,15 @@ int main(int argc, char* argv[])
     ++element_count;
     std::cout << "\tPower Law:" << el.name << std::endl;
   }
-
   std::cout << "Found " << element_count << " Element(s)" << std::endl;
+
+  int material_count = 0;
+  std::cout << "Materials ------------ " << std::endl;
+  for (auto& el : model.materials) {
+    ++material_count;
+    std::cout << "\tMaterial:" << el.name << std::endl;
+  }
+  std::cout << "Found " << material_count << " Material(s)" << std::endl;
 
   int node_count = 0;
   std::cout << "Nodes ---------------- " << std::endl;

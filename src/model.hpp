@@ -7,6 +7,7 @@
 #include <array>
 #include <fstream>
 #include "node.hpp"
+#include "material.hpp"
 #include "link.hpp"
 #include "powerlaw.hpp"
 #include "pugixml.hpp"
@@ -25,6 +26,10 @@ template <typename I, typename P> struct Model
   {
     bool success{ true };
     // Get the data from the XML
+    auto materials = root.child("Materials");
+    if (materials) {
+      success &= load_materials(materials);
+    }
     auto elements = root.child("Elements");
     if (elements) {
       success &= load_elements(elements);
@@ -357,6 +362,38 @@ private:
 
   }
 
+  bool load_materials(const pugi::xml_node& xml_materials)
+  {
+    bool success{ true };
+    int material_count{ 0 };
+    for (pugi::xml_node el : xml_materials.children("Material")) {
+      ++material_count;
+      std::string name;
+      auto attr = el.attribute("ID");
+      if (attr) {
+        name = attr.as_string();
+      } else {
+        errors.push_back("Material #" + std::to_string(material_count) + " does not have an ID");
+        success = false;
+        continue;
+      }
+
+      double default_conc;
+      auto node = el.child("DefaultConcentration");
+      if (node) {
+        default_conc = node.text().as_double();
+      } else {
+        errors.push_back("Material \"" + name + "\" does not have a default concentration");
+        success = false;
+        continue;
+      }
+
+      materials.emplace_back(name, default_conc);
+
+    }
+
+    return success;
+  }
 
   bool load_nodes(const pugi::xml_node &nodes)
   {
@@ -739,6 +776,8 @@ public:
   std::vector<Node<I,P>> simulated_nodes;
   std::vector<Node<I,P>> fixed_nodes;
   std::vector<Node<I,P>> calculated_nodes;
+
+  std::vector<Material> materials;
 
   std::vector<Link<I,P>> links;
 

@@ -30,6 +30,12 @@ template <typename I, typename P> struct Link
     return ps;
   }
 
+  void set_flow(double f)
+  {
+    flow = flow0 = f;
+    flow1 = 0.0
+  }
+
   const std::string name;
   const Node<I, P>& node0;
   const Node<I, P>& node1;

@@ -4,10 +4,12 @@ set(srcs properties.cpp)
 
 set(hdrs properties.hpp
          node.hpp
+         material.hpp
          model.hpp
          link.hpp
          element.hpp
-         powerlaw.hpp)
+         powerlaw.hpp
+         results.hpp)
 
 set(includes ../dependencies/skyline/include/skyline.hpp)
 
