@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+AirflowNetwork Example File #1
+
+ o=========o=========o=========o=========o
+one       two      three      four      five
+
+F = 5.0e-4 kg/d
+C_one = 6.0e-4 kg/kg
+C_two = C_three = C_four = C_five = 0.0
+V_one = V_two = V_three = V_four = V_five = 75.0 m^3
+
+-->
+<AirflowNetwork xmlns="http://github.com/jasondegraw/AirflowNetwork"
+                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                xsi:schemaLocation="http://github.com/jasondegraw/AirflowNetwork airflownetwork.xsd">
+  <Elements>
+    <PowerLaw ID="Crack1">
+      <FlowBasis>Mass</FlowBasis>
+      <Coefficient>1.0e-5</Coefficient>
+      <Exponent>0.65</Exponent>
+      <Transition>
+        <ByMinimum/>
+      </Transition>
+    </PowerLaw>
+  </Elements>
+  <Materials>
+    <Material ID="TheContaminant">
+      <DefaultConcentration units="kg/kg">0</DefaultConcentration>
+    </Material>
+  </Materials>
+  <Nodes>
+    <Node ID="one">
+      <Volume>
+        <SpecifiedVolume units="m^3">75</SpecifiedVolume>
+      </Volume>
+      <DefaultState>
+        <Temperature units="K">293.15</Temperature>
+        <Pressure units="Pa">101525.0</Pressure>
+      </DefaultState>
+      <InitialConcentrations>
+        <InitialConcentration>
+          <MaterialID IDref="TheContaminant"/>
+          <Concentration units="kg/kg">6.0e-4</Concentration>
+        </InitialConcentration>
+      </InitialConcentrations>
+    </Node>
+    <Node ID="two">
+      <Volume>
+        <SpecifiedVolume units="m^3">75</SpecifiedVolume>
+      </Volume>
+      <DefaultState>
+        <Temperature units="K">293.15</Temperature>
+        <Pressure units="Pa">101525.0</Pressure>
+      </DefaultState>
+    </Node>
+    <Node ID="three">
+      <Volume>
+        <SpecifiedVolume units="m^3">75</SpecifiedVolume>
+      </Volume>
+      <DefaultState>
+        <Temperature units="K">293.15</Temperature>
+        <Pressure units="Pa">101525.0</Pressure>
+      </DefaultState>
+    </Node>
+    <Node ID="four">
+      <Volume>
+        <SpecifiedVolume units="m^3">75</SpecifiedVolume>
+      </Volume>
+      <DefaultState>
+        <Temperature units="K">293.15</Temperature>
+        <Pressure units="Pa">101525.0</Pressure>
+      </DefaultState>
+    </Node>
+    <Node ID="five">
+      <Volume>
+        <SpecifiedVolume units="m^3">75</SpecifiedVolume>
+      </Volume>
+      <DefaultState>
+        <Temperature units="K">293.15</Temperature>
+        <Pressure units="Pa">101525.0</Pressure>
+      </DefaultState>
+    </Node>
+  </Nodes>
+  <Links>
+    <Link ID="one-two">
+      <ElementID IDref="Crack1"/>
+      <Nodes>
+        <Node>
+          <NodeID IDref="one"/>
+        </Node>
+        <Node>
+          <NodeID IDref="two"/>
+        </Node>
+      </Nodes>
+    </Link>
+    <Link ID="two-three">
+      <ElementID IDref="Crack1"/>
+      <Nodes>
+        <Node>
+          <NodeID IDref="two"/>
+        </Node>
+        <Node>
+          <NodeID IDref="three"/>
+        </Node>
+      </Nodes>
+    </Link>
+    <Link ID="three-four">
+      <ElementID IDref="Crack1"/>
+      <Nodes>
+        <Node>
+          <NodeID IDref="three"/>
+        </Node>
+        <Node>
+          <NodeID IDref="four"/>
+        </Node>
+      </Nodes>
+    </Link>
+    <Link ID="four-five">
+      <ElementID IDref="Crack1"/>
+      <Nodes>
+        <Node>
+          <NodeID IDref="four"/>
+        </Node>
+        <Node>
+          <NodeID IDref="five"/>
+        </Node>
+      </Nodes>
+    </Link>
+  </Links>
+  <FlowResults>
+    <FlowResult>
+      <Time units="s">0</Time>
+      <Flows units="kg/s">
+        <Flow IDref="one-two">5.0e-4</Flow>
+        <Flow IDref="two-three">5.0e-4</Flow>
+        <Flow IDref="three-four">5.0e-4</Flow>
+        <Flow IDref="four-five">5.0e-4</Flow>
+      </Flows>
+    </FlowResult>
+  </FlowResults>
+</AirflowNetwork>

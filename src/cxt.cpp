@@ -28,6 +28,7 @@
 #include <iostream>
 #include "pugixml.hpp"
 #include "model.hpp"
+#include "results.hpp"
 
 int main(int argc, char* argv[])
 {
@@ -36,8 +37,8 @@ int main(int argc, char* argv[])
     return 1;
   }
   pugi::xml_document doc;
-  pugi::xml_parse_result result = doc.load_file(argv[1]);
-  if (!result) {
+  pugi::xml_parse_result parse_result = doc.load_file(argv[1]);
+  if (!parse_result) {
     std::cerr << "Failed to load XML file name \"" << argv[1] << '\"' << std::endl;
   }
 
@@ -126,17 +127,36 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  model.linear_initialize();
+  // Read in flow results
+  airflownetwork::Results<airflownetwork::Link<size_t, airflownetwork::properties::AIRNET>> results;
+  results.load(afn, model.links);
+
+  for (auto& mesg : results.errors) {
+    std::cerr << mesg << std::endl;
+  }
+
+  if (results.link_flows.size() > 0) {
+    std::cout << "Flows ---------------- " << std::endl;
+    int count{ 0 };
+    for (auto& el : results.link_flows[0].results) {
+      ++count;
+      std::cout << '\t' << count << ' ' << el.object.name << ' ' << el.flow << std::endl;
+    }
+
+    results.link_flows[0].apply();
+  }
+
+  //model.linear_initialize();
 
   //model.save("out.xml");
 
-  model.open_output("output");
-  model.write_output(0.0);
+  //model.open_output("output");
+  //model.write_output(0.0);
 
-  model.steady_solve();
-  model.write_output(0.0);
+  //model.steady_solve();
+  //model.write_output(0.0);
 
-  model.close_output();
+  //model.close_output();
 
   return 0;
 }
