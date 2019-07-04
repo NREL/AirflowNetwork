@@ -19,6 +19,7 @@
                     <xs:complexType>
                         <xs:sequence>
                             <xs:element name="PowerLaw" type="afn:PowerLawType" minOccurs="0" maxOccurs="unbounded"/>
+                            <xs:element name="SimpleOpening" type="afn:SimpleOpeningType" minOccurs="0" maxOccurs="unbounded"/>
                             <xs:element name="DetailedOpening" type="afn:ComisDetailedOpeningType" minOccurs="0" maxOccurs="unbounded"/>
                         </xs:sequence>
                     </xs:complexType>
@@ -217,6 +218,11 @@
             <xs:documentation>Power law flow element</xs:documentation>
         </xs:annotation>
         <xs:sequence>
+            <xs:element name="Name" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Name of the power law flow element</xs:documentation>
+                </xs:annotation>
+            </xs:element>
             <xs:element name="Description" type="xs:string" minOccurs="0">
                 <xs:annotation>
                     <xs:documentation>Description of the power law flow element</xs:documentation>
@@ -358,8 +364,123 @@
             </xs:annotation>
         </xs:attribute>
     </xs:complexType>
-    <xs:complexType name="ComisDetailedOpeningType">
+    <xs:complexType name="SimpleOpeningType">
+        <xs:annotation>
+            <xs:documentation>Simple opening flow element</xs:documentation>
+        </xs:annotation>
         <xs:sequence>
+            <xs:element name="Name" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Name of the simple opening flow element</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Description" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Description of the simple opening flow element</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Height" type="afn:LengthQuantityType">
+                <xs:annotation>
+                    <xs:documentation>Height of the simple opening</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Width" type="afn:LengthQuantityType">
+                <xs:annotation>
+                    <xs:documentation>Width of the simple opening</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Tilt" type="afn:AngleQuantityType" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Tilt of the opening plane relative to ground, or the angle between the plane normal and the vertical</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Coefficient">
+                <xs:annotation>
+                    <xs:documentation>Power law flow coefficient when opening is closed</xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                    <xs:restriction base="xs:double">
+                        <xs:minExclusive value="0.0"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="LaminarCoefficient" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Power law flow coefficient for small pressure differences when the opening is closed, defaults to the coefficient value</xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                    <xs:restriction base="xs:double">
+                        <xs:minExclusive value="0.0"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="Exponent">
+                <xs:annotation>
+                    <xs:documentation>Power law flow exponent when the opening is closed</xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                    <xs:restriction base="xs:double">
+                        <xs:minInclusive value="0.5"/>
+                        <xs:maxInclusive value="1.0"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="ReferenceState" type="afn:AirStateType" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Reference state of the power law element when the opening is closed</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="DischargeCoefficient">
+                <xs:annotation>
+                    <xs:documentation>Fractional effectiveness of airflow</xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                    <xs:restriction base="xs:double">
+                        <xs:minExclusive value="0.0"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="MinimumForTwoWayFlow">
+                <xs:annotation>
+                    <xs:documentation>Cut-off below which there will be unidirectional flow</xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                    <xs:choice>
+                        <xs:element name="ContamDensityDifference">
+                            <xs:annotation>
+                                <xs:documentation>Minimum density difference computed as 0.0001*abs(pressure drop)</xs:documentation>
+                            </xs:annotation>
+                        </xs:element>
+                        <xs:element name="DensityDifference" type="afn:DensityQuantityType">
+                            <xs:annotation>
+                                <xs:documentation>Minimum density difference for two-way flow</xs:documentation>
+                            </xs:annotation>
+                        </xs:element>
+                        <xs:element name="TemperatureDifference" type="afn:TemperatureQuantityType">
+                            <xs:annotation>
+                                <xs:documentation>Minimum temperature difference for two-way flow</xs:documentation>
+                            </xs:annotation>
+                        </xs:element>
+                    </xs:choice>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="ID" type="xs:ID" use="required">
+            <xs:annotation>
+                <xs:documentation>Name of power law element, must be unique</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="ComisDetailedOpeningType">
+        <xs:annotation>
+            <xs:documentation>The COMIS detailed opening flow element</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="Name" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Name of the detailed opening flow element</xs:documentation>
+                </xs:annotation>
+            </xs:element>
             <xs:element name="Description" type="xs:string" minOccurs="0">
                 <xs:annotation>
                     <xs:documentation>Description of the detailed opening element</xs:documentation>
@@ -420,6 +541,11 @@
             <xs:documentation>A material that is transported by the flow network</xs:documentation>
         </xs:annotation>
         <xs:sequence>
+            <xs:element name="Name" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Name of the material</xs:documentation>
+                </xs:annotation>
+            </xs:element>
             <xs:element name="Description" type="xs:string" minOccurs="0">
                 <xs:annotation>
                     <xs:documentation>Description of the material</xs:documentation>
@@ -461,9 +587,14 @@
             <xs:documentation>Simple filter component, with only a specified removal efficiency</xs:documentation>
         </xs:annotation>
         <xs:sequence>
+            <xs:element name="Name" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Name of the filter</xs:documentation>
+                </xs:annotation>
+            </xs:element>
             <xs:element name="Description" type="xs:string" minOccurs="0">
                 <xs:annotation>
-                    <xs:documentation>Description of the model</xs:documentation>
+                    <xs:documentation>Description of the filter</xs:documentation>
                 </xs:annotation>
             </xs:element>
             <xs:element name="RemovalEfficiencies">
@@ -577,6 +708,11 @@
     <!-- General Model Types -->
     <xs:complexType name="AirStateType">
         <xs:sequence>
+            <xs:element name="Name" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Name of the air state</xs:documentation>
+                </xs:annotation>
+            </xs:element>
             <xs:element name="Description" type="xs:string" minOccurs="0">
                 <xs:annotation>
                     <xs:documentation>Description of the air state</xs:documentation>
@@ -919,6 +1055,12 @@
             <xs:enumeration value="ft^3"/>
         </xs:restriction>
     </xs:simpleType>
+    <xs:simpleType name="AngleUnitsEnum">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="degrees"/>
+            <xs:enumeration value="radians"/>
+        </xs:restriction>
+    </xs:simpleType>
     <xs:simpleType name="MassUnitsEnum">
         <xs:restriction base="xs:string">
             <xs:enumeration value="kg"/>
@@ -1025,6 +1167,16 @@
         <xs:simpleContent>
             <xs:extension base="afn:NonNegativeValueType">
                 <xs:attribute name="units" type="afn:VolumeUnitsEnum" use="required"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="AngleQuantityType">
+        <xs:annotation>
+            <xs:documentation>An angular quantity with specified units</xs:documentation>
+        </xs:annotation>
+        <xs:simpleContent>
+            <xs:extension base="xs:double">
+                <xs:attribute name="units" type="afn:AngleUnitsEnum" use="required"/>
             </xs:extension>
         </xs:simpleContent>
     </xs:complexType>

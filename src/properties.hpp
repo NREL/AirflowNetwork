@@ -194,6 +194,13 @@ template <typename P> struct State
     viscosity(P::viscosity(temperature))
   {}
 
+  void update()
+  {
+    density = P::density(pressure, temperature, humidity_ratio);
+    sqrt_density = std::sqrt(density);
+    viscosity = P::viscosity(temperature);
+  }
+
   double temperature{ P::temperature_0 };
   double pressure{ P::pressure_0 };  // absolute pressure
   double humidity_ratio{ P::humidity_ratio_0 };

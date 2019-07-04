@@ -9,7 +9,8 @@ set(hdrs properties.hpp
          link.hpp
          element.hpp
          powerlaw.hpp
-         results.hpp)
+         results.hpp
+         simpleopening.hpp)
 
 set(includes ../dependencies/skyline/include/skyline.hpp)
 
@@ -18,3 +19,5 @@ target_link_libraries(airflownetwork pugixml)
 
 add_executable(cxt ${hdrs} ${srcs} ${includes} cxt.cpp)
 target_link_libraries(cxt pugixml)
+
+add_executable(crack_timings ${hdrs} ${srcs} ${includes} crack_timings.cpp)

@@ -44,8 +44,8 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
-#ifndef POWERLAW_HPP
-#define POWERLAW_HPP
+#ifndef AIRFLOWNETWORK_SIMPLEOPENING_HPP
+#define AIRFLOWNETWORK_SIMPLEOPENING_HPP
 
 #include "element.hpp"
 #include "properties.hpp"
@@ -58,19 +58,21 @@ namespace airflownetwork {
 //double validate_temperature(double v, double default);
 //double validate_humidity_ratio(double v, double default);
 
-template <typename L, typename P> struct PowerLaw : public Element<L, P> // Surface crack component
+template <typename L, typename P> struct SimpleOpening : public Element<L,P> // Surface crack component
 {
   
   const double coefficient;  // Air Mass Flow Coefficient [kg/s at 1Pa]
-  const double laminar_coefficient;  // "Laminar" Air Mass Flow Coefficient [kg/s at 1Pa]
   const double exponent;     // Air Mass Flow exponent [dimensionless]
+  const double min_density_difference;
+  const double discharge_coefficient;
   const double referenceP;   // Reference barometric pressure for crack data
   const double referenceT;   // Reference temperature for crack data
   const double referenceW;   // Reference humidity ratio for crack data
 
-  PowerLaw(const std::string &name, double coefficient, double laminar_coefficient, double exponent=0.65, double referenceP=101325.0, double referenceT=20.0,
-    double referenceW=0.0) : Element(name), coefficient(validate_coefficient(coefficient)), laminar_coefficient(validate_coefficient(laminar_coefficient)), 
-    exponent(validate_exponent(exponent,0.65)), referenceP(validate_pressure(referenceP, 101325.0)), referenceT(validate_pressure(referenceT, 20.0)),
+  SimpleOpening(const std::string &name, double min_diff, double discharge_coeff, double coefficient, double exponent=0.65, double referenceP=101325.0, double referenceT=20.0,
+    double referenceW=0.0) : Element(name), coefficient(validate_coefficient(coefficient)), exponent(validate_exponent(exponent,0.65)), 
+    min_density_difference(validate_coefficient(min_diff))discharge_coefficient(validate_coefficient(discharge_coeff))
+    referenceP(validate_pressure(referenceP, 101325.0)), referenceT(validate_pressure(referenceT, 20.0)),
     referenceW(validate_pressure(referenceW, 0.0))
   {
     m_viscz_norm = P::viscosity(referenceT);
@@ -82,20 +84,22 @@ template <typename L, typename P> struct PowerLaw : public Element<L, P> // Surf
     L& linkage,                      // Linkage reference
     const State<P>& propN,           // Node 1 properties
     const State<P>& propM,           // Node 2 properties
-    std::array<double, 2>& F,        // Airflow through the component [kg/s]
-    std::array<double, 2>& DF        // Partial derivative:  DF/DP
+    std::array<double, 2> & F,       // Airflow through the component [kg/s]
+    std::array<double, 2> & DF       // Partial derivative:  DF/DP
   ) const
   {
+
     // SUBROUTINE INFORMATION:
     //       AUTHOR         George Walton
     //       DATE WRITTEN   Extracted from AIRNET
     //       MODIFIED       Lixing Gu, 2/1/04
     //                      Revised the subroutine to meet E+ needs
     //       MODIFIED       Lixing Gu, 6/8/05
-    //       RE-ENGINEERED  Jason DeGraw
+    //       RE-ENGINEERED  na
 
     // PURPOSE OF THIS SUBROUTINE:
-    // This subroutine solves airflow for a surface crack component
+    // This subroutine solves airflow for a Doorway airflow component using standard interface.
+    // A doorway may have two-way airflows. Heights measured relative to the bottom of the door.
 
     // METHODOLOGY EMPLOYED:
     // na
@@ -103,57 +107,112 @@ template <typename L, typename P> struct PowerLaw : public Element<L, P> // Surf
     // REFERENCES:
     // na
 
-    double VisAve{ 0.5 * (propN.viscosity + propM.viscosity) };
-    double Tave{ 0.5 * (propN.temperature + propM.temperature) };
+    // SUBROUTINE PARAMETER DEFINITIONS:
+    double const SQRT2(1.414213562373095);
 
-    double multiplier{ linkage.factor };
+    // SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+    double DPMID; // pressure drop at mid-height of doorway.
+    double C;
+    double DF0;   // derivative factor at the bottom of the door.
+    double DFH;   // derivative factor at the top of the door.
 
-    double sign{ 1.0 };
-    double upwind_temperature{ propN.temperature };
-    double upwind_density{ propN.density };
-    double upwind_viscosity{ propN.viscosity };
-    double upwind_sqrt_density{ propN.sqrt_density };
-    double abs_pdrop = pdrop;
+    double F0;    // flow factor at the bottom of the door.
+    double FH;    // flow factor at the top of the door.
+    double Y;     // height of neutral plane rel. to bottom of door (m).
 
-    if (pdrop < 0.0) {
-      sign = -1.0;
-      upwind_temperature = propM.temperature;
-      upwind_density = propM.density;
-      upwind_viscosity = propM.viscosity;
-      upwind_sqrt_density = propM.sqrt_density;
-      abs_pdrop = -pdrop;
+    int NF{ 1 };
+
+    // Formats
+    // static gio::Fmt Format_900("(A5,9X,4E16.7)");
+    // static gio::Fmt Format_903("(A5,3I3,4E16.7)");
+
+    // Move this all to a per-link precalculation?
+    double Width{ linkage.width };
+    double Height{ linkage.height };
+    double coeff = coefficient * 2.0 * (Width + Height);
+    double OpenFactor{ linkage.opening_factor };
+    double multiplier{ linkage.multiplier };
+    if (OpenFactor > 0.0) {
+      Width *= OpenFactor;
+      if (linkage.tilt < 90.0) {
+        Height *= linkage.sin_tilt;
+      }
     }
 
-    double coef = coefficient * multiplier / upwind_sqrt_density;
-    
-    // Laminar calculation
-    double RhoCor{ TOKELVIN(upwind_temperature) / TOKELVIN(Tave) };
-    double Ctl{ std::pow(m_rhoz_norm / upwind_density / RhoCor, exponent - 1.0) * std::pow(m_viscz_norm / VisAve, 2.0 * exponent - 1.0) };
-    double CDM{ coef * upwind_density / upwind_viscosity * Ctl };
-    double FL{ CDM * pdrop };
-    double FT;
-
-    if (laminar) {
-      DF[0] = CDM;
-      F[0] = FL;
+    if (pdrop >= 0.0) {
+      coeff /= propN.sqrt_density;
     } else {
-      // Turbulent flow.
-      if (exponent == 0.5) {
-        FT = sign * coef * upwind_sqrt_density * std::sqrt(abs_pdrop) * Ctl;
+      coeff /= propM.sqrt_density;
+    }
+
+    // Add window multiplier with window close
+    if (multiplier > 1.0) coeff *= multiplier;
+    // Add window multiplier with window open
+    if (OpenFactor > 0.0) {
+      if (multiplier > 1.0) Width *= multiplier;
+    }
+
+    double DRHO{ propN.density - propM.density }; // difference in air densities between rooms.
+    double GDRHO{ 9.8 * DRHO };
+
+    if (OpenFactor == 0.0) {
+      genericCrack(laminar, coeff, exponent, pdrop, propN, propM, F, DF);
+      return 1;
+    }
+    if (std::abs(DRHO) < MinRhoDiff || laminar) {
+      DPMID = pdrop - 0.5 * Height * GDRHO;
+      // Initialization or identical temps: treat as one-way flow.
+      genericCrack(laminar, coeff, exponent, DPMID, propN, propM, F, DF);
+    } else {
+      // Possible two-way flow:
+      Y = pdrop / GDRHO;
+
+      // F0 = lower flow, FH = upper flow.
+      C = SQRT2 * Width * DischCoeff;
+      DF0 = C * std::sqrt(std::abs(pdrop)) / std::abs(GDRHO);
+      //        F0 = 0.666667d0*C*SQRT(ABS(GDRHO*Y))*ABS(Y)
+      F0 = (2.0 / 3.0) * C * std::sqrt(std::abs(GDRHO * Y)) * std::abs(Y);
+      DFH = C * std::sqrt(std::abs((Height - Y) / GDRHO));
+      //        FH = 0.666667d0*DFH*ABS(GDRHO*(Height-Y))
+      FH = (2.0 / 3.0) * DFH * std::abs(GDRHO * (Height - Y));
+
+      if (Y <= 0.0) {
+        // One-way flow (negative).
+        if (DRHO >= 0.0) {
+          F[0] = -propM.sqrt_density * std::abs(FH - F0);
+          DF[0] = propM.sqrt_density * std::abs(DFH - DF0);
+        } else {
+          F[0] = propN.sqrt_density * std::abs(FH - F0);
+          DF[0] = propN.sqrt_density * std::abs(DFH - DF0);
+        }
+      } else if (Y >= Height) {
+        // One-way flow (positive).
+        if (DRHO >= 0.0) {
+          F[0] = propN.sqrt_density * std::abs(FH - F0);
+          DF[0] = propN.sqrt_density * std::abs(DFH - DF0);
+        } else {
+          F[0] = -propM.sqrt_density * std::abs(FH - F0);
+          DF[0] = propM.sqrt_density * std::abs(DFH - DF0);
+        }
       } else {
-        FT = sign * coef * upwind_sqrt_density * std::pow(abs_pdrop, exponent) * Ctl;
-      }
-      // Select laminar or turbulent flow.
-      if (std::abs(FL) <= std::abs(FT)) {
-        F[0] = FL;
-        DF[0] = CDM;
-      } else {
-        F[0] = FT;
-        DF[0] = FT * exponent / pdrop;
+        // Two-way flow.
+        NF = 2;
+        if (DRHO >= 0.0) {
+          F[0] = -propM.sqrt_density * FH;
+          DF[0] = propM.sqrt_density * DFH;
+          F[1] = propN.sqrt_density * F0;
+          DF[1] = propN.sqrt_density * DF0;
+        } else {
+          F[0] = propN.sqrt_density * FH;
+          DF[0] = propN.sqrt_density * DFH;
+          F[1] = -propM.sqrt_density * F0;
+          DF[1] = propM.sqrt_density * DF0;
+        }
       }
     }
-  return 1;
-}
+
+    return NF;
+  }
 
   double linearize(double multiplier,  // Linkage multiplier
     const State<P>& propN,             // Node 1 properties
@@ -190,108 +249,12 @@ template <typename L, typename P> struct PowerLaw : public Element<L, P> // Surf
   }
 
 private:
-double m_viscz_norm;
-double m_rhoz_norm;
-
-};
-
-
-template <typename L, typename P> struct ContamXPowerLaw : public Element<L,P> // Surface crack component
-{
-
-  const double coefficient;  // Air Mass Flow Coefficient [kg/s at 1Pa]
-  const double laminar_coefficient;  // "Laminar" Air Mass Flow Coefficient [kg/s at 1Pa]
-  const double exponent;     // Air Mass Flow exponent [dimensionless]
-
-  // Default Constructor
-  ContamXPowerLaw(const std::string& name, double coefficient, double laminar_coefficient, double exponent = 0.65) : Element(name), coefficient(validate_coefficient(coefficient)),
-    laminar_coefficient(validate_coefficient(laminar_coefficient)), exponent(validate_exponent(exponent, 0.65))
-  {}
-
-  static double adjustment(double density, double dynamic_viscosity, double exponent)
-  {
-    return exp(log(1.20410 / density) * (exponent - 0.5) + log(1.50839e-5 * dynamic_viscosity) * (2 * exponent - 1));
-
-  }
-
-  static double pow(double a, double x)
-  {
-    if (x == 0.5) {
-      return std::sqrt(a);
-    }
-    return std::pow(a, x);
-  }
-
-  virtual int calculate(bool const laminar,  // Initialization flag.If = 1, use laminar relationship
-    double const pdrop,                      // Total pressure drop across a component (P1 - P2) [Pa]
-    L& linkage,                              // Linkage reference
-    const State<P>& propN,                   // Node 1 properties
-    const State<P>& propM,                   // Node 2 properties
-    std::array<double, 2>& F,                // Airflow through the component [kg/s]
-    std::array<double, 2>& DF                // Partial derivative:  DF/DP
-  ) const
-  {
-
-    double multiplier{ linkage.factor };
-
-    double sign{ 1.0 };
-    double upwind_temperature{ propN.temperature };
-    double upwind_density{ propN.density };
-    double upwind_viscosity{ propN.viscosity };
-    double upwind_sqrt_density{ propN.sqrt_density };
-    double abs_pdrop = pdrop;
-
-    if (pdrop < 0.0) {
-      sign = -1.0;
-      upwind_temperature = propM.temperature;
-      upwind_density = propM.density;
-      upwind_viscosity = propM.viscosity;
-      upwind_sqrt_density = propM.sqrt_density;
-      abs_pdrop = -pdrop;
-    }
-    double dvisc = upwind_viscosity / upwind_density;
-
-    // Laminar calculation
-    double cdm{ laminar_coefficient * multiplier * dvisc };
-    double FL{ cdm * pdrop };
-
-    if (laminar) {
-      DF[0] = cdm;
-      F[0] = FL;
-    } else {
-      // Turbulent flow.
-      double Tadj = adjustment(upwind_density, dvisc, exponent);
-      double FT = sign * Tadj * coefficient * multiplier * std::sqrt(0.5 * (propN.density + propM.density)) * pow(abs_pdrop, exponent);
-
-      // Select laminar or turbulent flow.
-      if (std::abs(FL) <= std::abs(FT)) {
-        F[0] = FL;
-        DF[0] = cdm;
-      } else {
-        F[0] = FT;
-        DF[0] = FT * exponent / pdrop;
-      }
-    }
-    return 1;
-  }
-
-  double linearize(double multiplier,  // Linkage multiplier
-    const State<P>& propN,             // Node 1 properties
-    const State<P>& propM              // Node 2 properties
-  ) const
-  {
-
-    double dviscN = propN.viscosity / propN.density;
-    double dviscM = propM.viscosity / propM.density;
-    double dvisc = 0.5 * (dviscN + dviscM);
-
-    // Laminar calculation
-    return laminar_coefficient * multiplier * dvisc;
-  }
+  double m_viscz_norm;
+  double m_rhoz_norm;
 
 };
 
 
 }
 
-#endif // !POWERLAW_HPP
+#endif // !AIRFLOWNETWORK_SIMPLEOPENING_HPP

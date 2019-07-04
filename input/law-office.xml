@@ -232,7 +232,7 @@
   </Elements>
   <Materials>
     <Material ID="CO2">
-      <AmbientConcentration units="ppm">400</AmbientConcentration>
+      <DefaultConcentration units="ppm">400</DefaultConcentration>
       <NonTrace/>
     </Material>
   </Materials>
