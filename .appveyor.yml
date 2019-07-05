@@ -1,0 +1,24 @@
+os: Visual Studio 2017
+
+platform: x64
+
+configuration: Release
+
+init:
+  - git config --global core.autocrlf input
+
+before_build:
+  - mkdir build
+  - cd build
+  - cmake -A%PLATFORM% ..
+  - cd ..
+
+build:
+  project: build\airflownetwork.sln
+  parallel: true
+  verbosity: normal        # quiet|minimal|normal|detailed
+
+test_script:
+  - cd build\bin\Release
+  - cmd: airflownetwork_tests.exe
+  - cd ..\..\..
