@@ -1,3 +1,3 @@
 [submodule "dependencies/skyline"]
 	path = dependencies/skyline
-	url = https://github.nrel.gov/jdegraw/skyline.git
+	url = https://github.com/jasondegraw/skyline.git
