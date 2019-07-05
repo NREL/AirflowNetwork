@@ -44,34 +44,34 @@ inline double validate_coefficient(double v)
   return std::abs(v);
 }
 
-inline double validate_exponent(double v, double default)
+inline double validate_exponent(double v, double default_value)
 {
   if (v < 0.5 || v > 1.0) {
-    return default;
+    return default_value;
   }
   return v;
 }
 
-inline double validate_pressure(double v, double default)
+inline double validate_pressure(double v, double default_value)
 {
   if (v <= 0.0) {
-    return default;
+    return default_value;
   }
   return v;
 }
 
-inline double validate_temperature(double v, double default)
+inline double validate_temperature(double v, double default_value)
 {
   if (v <= -273.15) {
-    return default;
+    return default_value;
   }
   return v;
 }
 
-inline double validate_humidity_ratio(double v, double default)
+inline double validate_humidity_ratio(double v, double default_value)
 {
   if (v <= 0.0) {
-    return default;
+    return default_value;
   }
   return v;
 }
