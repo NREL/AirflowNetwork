@@ -7,6 +7,9 @@ configuration: Release
 init:
   - git config --global core.autocrlf input
 
+install:
+  - git submodule -q update --init
+
 before_build:
   - mkdir build
   - cd build
