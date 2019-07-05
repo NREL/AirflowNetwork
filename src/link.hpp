@@ -39,9 +39,9 @@ struct AirProperties;
 
 template <typename I, typename P> struct Link
 {
-  Link(const std::string &name, Node<I,P> &node0, Node<I,P> &node1, Element<Link,P> &element, double height0=0.0,
+  Link(const std::string &name, Node<I,P> &node0, Node<I,P> &node1, Element<P> &element, double height0=0.0,
     double height1=0.0, double flow0=0.0, double flow1=0.0, double multiplier=1.0) : name(name), node0(node0), node1(node1),
-    element(element), height0(height0), height1(height1), stack_delta_p(0.0), added_delta_p(0.0), delta_p(0.0), flow(flow0-flow1), flow0(flow0), flow1(flow1), multiplier(multiplier), factor(multiplier), index0(0), index1(0)
+    element(element), height0(height0), height1(height1), stack_delta_p(0.0), added_delta_p(0.0), delta_p(0.0), flow(flow0-flow1), flow0(flow0), flow1(flow1), multiplier(multiplier), control(1.0), index0(0), index1(0)
   {}
 
   double upwind_stack_pressure() // This is maybe not a great name
@@ -66,7 +66,7 @@ template <typename I, typename P> struct Link
   const std::string name;
   const Node<I, P>& node0;
   const Node<I, P>& node1;
-  const Element<Link, P>& element;
+  const Element<P>& element;
   
   double height0;
   double height1;
@@ -79,7 +79,7 @@ template <typename I, typename P> struct Link
   double flow0;
   double flow1;
   double multiplier;
-  double factor;
+  double control;
 
   I index0;
   I index1;

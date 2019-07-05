@@ -47,45 +47,32 @@
 #ifndef AIRFLOWNETWORK_SIMPLEOPENING_HPP
 #define AIRFLOWNETWORK_SIMPLEOPENING_HPP
 
-#include "element.hpp"
+#include "powerlaw.hpp"
 #include "properties.hpp"
 
 namespace airflownetwork {
 
-//double validate_coefficient(double v);
-//double validate_exponent(double v, double default);
-//double validate_pressure(double v, double default);
-//double validate_temperature(double v, double default);
-//double validate_humidity_ratio(double v, double default);
-
-template <typename L, typename P> struct SimpleOpening : public Element<L,P> // Surface crack component
+template <typename P> struct SimpleOpening : public PowerLaw<P> // Surface crack component
 {
-  
-  const double coefficient;  // Air Mass Flow Coefficient [kg/s at 1Pa]
-  const double exponent;     // Air Mass Flow exponent [dimensionless]
+  const double height;
+  const double width;
   const double min_density_difference;
   const double discharge_coefficient;
-  const double referenceP;   // Reference barometric pressure for crack data
-  const double referenceT;   // Reference temperature for crack data
-  const double referenceW;   // Reference humidity ratio for crack data
 
-  SimpleOpening(const std::string &name, double min_diff, double discharge_coeff, double coefficient, double exponent=0.65, double referenceP=101325.0, double referenceT=20.0,
-    double referenceW=0.0) : Element(name), coefficient(validate_coefficient(coefficient)), exponent(validate_exponent(exponent,0.65)), 
-    min_density_difference(validate_coefficient(min_diff))discharge_coefficient(validate_coefficient(discharge_coeff))
-    referenceP(validate_pressure(referenceP, 101325.0)), referenceT(validate_pressure(referenceT, 20.0)),
-    referenceW(validate_pressure(referenceW, 0.0))
-  {
-    m_viscz_norm = P::viscosity(referenceT);
-    m_rhoz_norm = P::density(referenceP, referenceT, referenceW);
-  }
+  SimpleOpening(const std::string &name, double height, double width, double min_diff, double discharge_coeff, double coefficient, double laminar_coefficient,
+    double exponent=0.65, double referenceP=101325.0, double referenceT=20.0, double referenceW=0.0) : 
+    PowerLaw(name, coefficient, laminar_coefficient, exponent, referenceP, referenceT, referenceW), height(height), width(width),
+    min_density_difference(validate_coefficient(min_diff)), discharge_coefficient(validate_coefficient(discharge_coeff))
+  {}
 
-  int calculate(bool const laminar,  // Initialization flag.If = 1, use laminar relationship
-    double const pdrop,              // Total pressure drop across a component (P1 - P2) [Pa]
-    L& linkage,                      // Linkage reference
-    const State<P>& propN,           // Node 1 properties
-    const State<P>& propM,           // Node 2 properties
-    std::array<double, 2> & F,       // Airflow through the component [kg/s]
-    std::array<double, 2> & DF       // Partial derivative:  DF/DP
+  virtual int calculate(bool const laminar,  // Initialization flag.If = 1, use laminar relationship
+    double const pdrop,                      // Total pressure drop across a component (P1 - P2) [Pa]
+    double multiplier,                       // Element multiplier
+    double control,                          // Control signal
+    const State<P>& propN,                   // Node 1 properties
+    const State<P>& propM,                   // Node 2 properties
+    std::array<double, 2> & F,               // Airflow through the component [kg/s]
+    std::array<double, 2> & DF               // Partial derivative:  DF/DP
   ) const
   {
 
@@ -127,16 +114,16 @@ template <typename L, typename P> struct SimpleOpening : public Element<L,P> // 
     // static gio::Fmt Format_903("(A5,3I3,4E16.7)");
 
     // Move this all to a per-link precalculation?
-    double Width{ linkage.width };
-    double Height{ linkage.height };
-    double coeff = coefficient * 2.0 * (Width + Height);
-    double OpenFactor{ linkage.opening_factor };
-    double multiplier{ linkage.multiplier };
+    double Width{ width };
+    double Height{ height };
+    double coeff = coefficient * 2.0 * (Width + Height); // This has consequences for the open laminar case, the crack length should not be involved
+    double OpenFactor{ control };
+    
     if (OpenFactor > 0.0) {
       Width *= OpenFactor;
-      if (linkage.tilt < 90.0) {
-        Height *= linkage.sin_tilt;
-      }
+      //if (linkage.tilt < 90.0) {
+      //  Height *= linkage.sin_tilt;
+      //}
     }
 
     if (pdrop >= 0.0) {
@@ -159,7 +146,7 @@ template <typename L, typename P> struct SimpleOpening : public Element<L,P> // 
       genericCrack(laminar, coeff, exponent, pdrop, propN, propM, F, DF);
       return 1;
     }
-    if (std::abs(DRHO) < MinRhoDiff || laminar) {
+    if (std::abs(DRHO) < min_density_difference || laminar) {
       DPMID = pdrop - 0.5 * Height * GDRHO;
       // Initialization or identical temps: treat as one-way flow.
       genericCrack(laminar, coeff, exponent, DPMID, propN, propM, F, DF);
@@ -168,7 +155,7 @@ template <typename L, typename P> struct SimpleOpening : public Element<L,P> // 
       Y = pdrop / GDRHO;
 
       // F0 = lower flow, FH = upper flow.
-      C = SQRT2 * Width * DischCoeff;
+      C = SQRT2 * Width * discharge_coefficient;
       DF0 = C * std::sqrt(std::abs(pdrop)) / std::abs(GDRHO);
       //        F0 = 0.666667d0*C*SQRT(ABS(GDRHO*Y))*ABS(Y)
       F0 = (2.0 / 3.0) * C * std::sqrt(std::abs(GDRHO * Y)) * std::abs(Y);
@@ -214,43 +201,8 @@ template <typename L, typename P> struct SimpleOpening : public Element<L,P> // 
     return NF;
   }
 
-  double linearize(double multiplier,  // Linkage multiplier
-    const State<P>& propN,             // Node 1 properties
-    const State<P>& propM              // Node 2 properties
-  ) const
-  {
-    // SUBROUTINE INFORMATION:
-    //       AUTHOR         Jason DeGraw
-    //       DATE WRITTEN   Extracted from AFE*** from AIRNET
-    //       MODIFIED       na
-    //       MODIFIED       na
-    //       RE-ENGINEERED  na
-
-    // PURPOSE OF THIS SUBROUTINE:
-    // This subroutine computes the linear coefficient for airflow for a surface crack component
-
-    // METHODOLOGY EMPLOYED:
-    // na
-
-    // REFERENCES:
-    // na
-
-    double VisAve{ 0.5 * (propN.viscosity + propM.viscosity) };
-    double Tave{ 0.5 * (propN.temperature + propM.temperature) };
-    double Dave{ 0.5 * (propN.density + propM.density) };
-
-    double coef = coefficient * multiplier / std::sqrt(Dave);
-
-    // Laminar calculation
-    double Ctl{ std::pow(m_rhoz_norm / Dave, exponent - 1.0) * std::pow(m_viscz_norm / VisAve, 2.0 * exponent - 1.0) };
-    double CDM{ coef * Dave / VisAve * Ctl };
-
-    return CDM;
-  }
-
 private:
-  double m_viscz_norm;
-  double m_rhoz_norm;
+  // Nothing to see here
 
 };
 

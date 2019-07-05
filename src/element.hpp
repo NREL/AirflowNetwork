@@ -288,7 +288,7 @@ template<typename P> void genericCrack0(bool const laminar, // Initialization fl
   return;
 }
 
-template <typename L, typename P> struct Element
+template <typename P> struct Element
 {
   Element(const std::string& name) : name(name)
   {}
@@ -297,7 +297,8 @@ template <typename L, typename P> struct Element
 
   virtual int calculate(bool laminar,  // Initialization flag.If = 1, use laminar relationship
     double pdrop,                      // Total pressure drop across a component (P1 - P2) [Pa]
-    L& linkage,                        // Linkage reference
+    double multiplier,                 // Element multiplier
+    double control,                    // Control signal
     const State<P>& propN,             // Node 1 properties
     const State<P>& propM,             // Node 2 properties
     std::array<double, 2>& F,          // Airflow through the component [kg/s]

@@ -112,27 +112,17 @@ TEST_CASE("Test the original generic crack function", "[genericCrack0]")
   CHECK(DF[1] == 0.0);
 }
 
-struct UnitLink
-{
-  double height = 1.0;
-  double width = 1.0;
-  double multiplier = 1.0;
-  double factor = 1.0;
-  double opening_factor = 0.5;
-  double tilt = 90.0;
-  double sin_tilt = 1.0;
-};
-
 TEST_CASE("Test the power law element", "[PowerLaw]")
 {
-  airflownetwork::PowerLaw<UnitLink, airflownetwork::properties::Fixed> powerlaw("powerlaw", 0.001, 0.001);
+  airflownetwork::PowerLaw<airflownetwork::properties::Fixed> powerlaw("powerlaw", 0.001, 0.001);
   airflownetwork::State<airflownetwork::properties::Fixed> state0;
   airflownetwork::State<airflownetwork::properties::Fixed> state1;
 
   std::array<double, 2> F{ {0.0, 0.0} };
   std::array<double, 2> DF{ {0.0, 0.0} };
 
-  UnitLink link;
+  double multiplier{ 1.0 };
+  double control{ 1.0 };
 
   double dp{ 10.0 };
 
@@ -141,74 +131,171 @@ TEST_CASE("Test the power law element", "[PowerLaw]")
   CHECK(C == Approx(.001 * std::sqrt(1.2041) / 0.0000181625));
 
   // Laminar tests
-  powerlaw.calculate(true, dp, link, state0, state1, F, DF);
+  powerlaw.calculate(true, dp, multiplier, control, state0, state1, F, DF);
   CHECK(F[0] == .01 * std::sqrt(1.2041) / 0.0000181625);
   CHECK(F[1] == 0.0);
   CHECK(DF[0] == Approx(.001 * std::sqrt(1.2041) / 0.0000181625));
   CHECK(DF[1] == 0.0);
 
-  powerlaw.calculate(true, -dp, link, state0, state1, F, DF);
+  powerlaw.calculate(true, -dp, multiplier, control, state0, state1, F, DF);
   CHECK(F[0] == -.01 * std::sqrt(1.2041) / 0.0000181625);
   CHECK(F[1] == 0.0);
   CHECK(DF[0] == Approx(.001 * std::sqrt(1.2041) / 0.0000181625));
   CHECK(DF[1] == 0.0);
 
   // Turbulent tests
-  powerlaw.calculate(false, dp, link, state0, state1, F, DF);
+  powerlaw.calculate(false, dp, multiplier, control, state0, state1, F, DF);
   CHECK(F[0] == .001 * std::pow(10.0, 0.65));
   CHECK(F[1] == 0.0);
   CHECK(DF[0] == Approx(.000065 * std::pow(10.0, 0.65)));
   CHECK(DF[1] == 0.0);
 
-  powerlaw.calculate(false, -dp, link, state0, state1, F, DF);
+  powerlaw.calculate(false, -dp, multiplier, control, state0, state1, F, DF);
   CHECK(F[0] == -.001 * std::pow(10.0, 0.65));
   CHECK(F[1] == 0.0);
   CHECK(DF[0] == Approx(.000065 * std::pow(10.0, 0.65)));
+  CHECK(DF[1] == 0.0);
+
+  control = 2.0;
+  powerlaw.calculate(false, dp, multiplier, control, state0, state1, F, DF);
+  CHECK(F[0] == .002 * std::pow(10.0, 0.65));
+  CHECK(F[1] == 0.0);
+  CHECK(DF[0] == Approx(.00013 * std::pow(10.0, 0.65)));
+  CHECK(DF[1] == 0.0);
+
+  powerlaw.calculate(false, -dp, multiplier, control, state0, state1, F, DF);
+  CHECK(F[0] == -.002 * std::pow(10.0, 0.65));
+  CHECK(F[1] == 0.0);
+  CHECK(DF[0] == Approx(.00013 * std::pow(10.0, 0.65)));
   CHECK(DF[1] == 0.0);
 }
 
 TEST_CASE("Test the simple opening element", "[SimpleOpening]")
 {
-  //airflownetwork::SimpleOpening<UnitLink, airflownetwork::properties::Fixed> opening("opening", 0.001, 0.001);
+  airflownetwork::SimpleOpening<airflownetwork::properties::Fixed> opening("opening", 1.0, 0.5, 0.01, 0.5, 0.001, 0.001);
 
-  airflownetwork::PowerLaw<UnitLink, airflownetwork::properties::Fixed> powerlaw("powerlaw", 0.001, 0.001);
   airflownetwork::State<airflownetwork::properties::Fixed> state0;
   airflownetwork::State<airflownetwork::properties::Fixed> state1;
 
   std::array<double, 2> F{ {0.0, 0.0} };
   std::array<double, 2> DF{ {0.0, 0.0} };
 
-  UnitLink link;
+  double multiplier{ 1.0 };
+  double control{ 0.0 };
 
   double dp{ 10.0 };
 
-  // Linearized test
-  double C = powerlaw.linearize(1.0, state0, state1);
-  CHECK(C == Approx(.001 * std::sqrt(1.2041) / 0.0000181625));
-
-  // Laminar tests
-  powerlaw.calculate(true, dp, link, state0, state1, F, DF);
-  CHECK(F[0] == .01 * std::sqrt(1.2041) / 0.0000181625);
+  // Crack tests, laminar
+  opening.calculate(true, dp, multiplier, control, state0, state1, F, DF);
+  //CHECK(F[0] == .01 * std::sqrt(1.2041) / 0.0000181625);
+  CHECK(F[0] == Approx(.03 / 0.0000181625));
   CHECK(F[1] == 0.0);
-  CHECK(DF[0] == Approx(.001 * std::sqrt(1.2041) / 0.0000181625));
+  CHECK(DF[0] == Approx(.003 / 0.0000181625));
   CHECK(DF[1] == 0.0);
 
-  powerlaw.calculate(true, -dp, link, state0, state1, F, DF);
-  CHECK(F[0] == -.01 * std::sqrt(1.2041) / 0.0000181625);
+  opening.calculate(true, -dp, multiplier, control, state0, state1, F, DF);
+  CHECK(F[0] == Approx(-.03 / 0.0000181625));
   CHECK(F[1] == 0.0);
-  CHECK(DF[0] == Approx(.001 * std::sqrt(1.2041) / 0.0000181625));
+  CHECK(DF[0] == Approx(.003 / 0.0000181625));
   CHECK(DF[1] == 0.0);
 
-  // Turbulent tests
-  powerlaw.calculate(false, dp, link, state0, state1, F, DF);
-  CHECK(F[0] == .001 * std::pow(10.0, 0.65));
+
+  // Crack tests, turbulent
+  opening.calculate(false, dp, multiplier, control, state0, state1, F, DF);
+  CHECK(F[0] == .003 * std::pow(10.0, 0.65) / std::sqrt(1.2041));
   CHECK(F[1] == 0.0);
-  CHECK(DF[0] == Approx(.000065 * std::pow(10.0, 0.65)));
+  CHECK(DF[0] == Approx(.000195 * std::pow(10.0, 0.65) / std::sqrt(1.2041)));
   CHECK(DF[1] == 0.0);
 
-  powerlaw.calculate(false, -dp, link, state0, state1, F, DF);
-  CHECK(F[0] == -.001 * std::pow(10.0, 0.65));
+  opening.calculate(false, -dp, multiplier, control, state0, state1, F, DF);
+  CHECK(F[0] == -.003 * std::pow(10.0, 0.65) / std::sqrt(1.2041));
   CHECK(F[1] == 0.0);
-  CHECK(DF[0] == Approx(.000065 * std::pow(10.0, 0.65)));
+  CHECK(DF[0] == Approx(.000195 * std::pow(10.0, 0.65) / std::sqrt(1.2041)));
   CHECK(DF[1] == 0.0);
+
+  // Open tests, laminar
+  control = 0.5;
+  opening.calculate(true, dp, multiplier, control, state0, state1, F, DF);
+  CHECK(F[0] == Approx(.03 / 0.0000181625));
+  CHECK(F[1] == 0.0);
+  CHECK(DF[0] == Approx(.003 / 0.0000181625));
+  CHECK(DF[1] == 0.0);
+
+  opening.calculate(true, -dp, multiplier, control, state0, state1, F, DF);
+  CHECK(F[0] == Approx(-.03 / 0.0000181625));
+  CHECK(F[1] == 0.0);
+  CHECK(DF[0] == Approx(.003 / 0.0000181625));
+  CHECK(DF[1] == 0.0);
+
+  // Open tests, turbulent, one way
+  state1.density = 1.1041;
+  state1.sqrt_density = std::sqrt(1.1041);
+
+  double C = 0.125 * 1.414213562373095;
+  double rho_diff = 0.1;
+  double g_rho_diff = 0.98;
+  double y = dp / g_rho_diff;
+  double df0 = C * std::sqrt(dp) / g_rho_diff;
+  double f0 = 2.0 * C * std::sqrt(dp) * y/3.0;
+  double dfh = C * std::sqrt(std::abs((1.0 - y) / g_rho_diff));
+  double fh = 2.0 * dfh * std::abs(g_rho_diff * (1.0 - y))/3.0;
+  
+  opening.calculate(false, dp, multiplier, control, state0, state1, F, DF);
+  CHECK(F[0] == Approx(state0.sqrt_density * std::abs(fh - f0)));
+  CHECK(F[1] == 0.0);
+  CHECK(DF[0] == Approx(state0.sqrt_density * std::abs(dfh - df0)));
+  CHECK(DF[1] == 0.0);
+
+  y = -dp / g_rho_diff;
+  dfh = C * std::sqrt(std::abs((1.0 - y) / g_rho_diff));
+  fh = 2.0 * dfh * std::abs(g_rho_diff * (1.0 - y)) / 3.0;
+  opening.calculate(false, -dp, multiplier, control, state0, state1, F, DF);
+  CHECK(F[0] == Approx(-state1.sqrt_density * std::abs(fh - f0)));
+  CHECK(F[1] == 0.0);
+  CHECK(DF[0] == Approx(state1.sqrt_density * std::abs(dfh - df0)));
+  CHECK(DF[1] == 0.0);
+
+  // Open tests, turbulent, two way
+  dp = 0.1;
+  state1.density = 1.1041;
+  state1.sqrt_density = std::sqrt(1.1041);
+
+  C = 0.125 * 1.414213562373095;
+  rho_diff = 0.1;
+  g_rho_diff = 0.98;
+  y = dp / g_rho_diff;
+  df0 = C * std::sqrt(dp) / g_rho_diff;
+  f0 = 2.0 * C * std::sqrt(dp) * y / 3.0;
+  dfh = C * std::sqrt(std::abs((1.0 - y) / g_rho_diff));
+  fh = 2.0 * dfh * std::abs(g_rho_diff * (1.0 - y)) / 3.0;
+
+  int nf = opening.calculate(false, dp, multiplier, control, state0, state1, F, DF);
+  CHECK(nf == 2);
+  CHECK(F[0] == Approx(-state1.sqrt_density * fh));
+  CHECK(F[1] == Approx(state0.sqrt_density * f0)); 
+  CHECK(DF[0] == Approx(state1.sqrt_density* dfh));
+  CHECK(DF[1] == Approx(state0.sqrt_density * df0));
+
+
+  state0.density = 1.1041;
+  state0.sqrt_density = std::sqrt(1.1041);
+  state1.density = 1.2041;
+  state1.sqrt_density = std::sqrt(1.2041);
+
+  C = 0.125 * 1.414213562373095;
+  rho_diff = 0.1;
+  g_rho_diff = 0.98;
+  y = dp / g_rho_diff;
+  df0 = C * std::sqrt(dp) / g_rho_diff;
+  f0 = 2.0 * C * std::sqrt(dp) * y / 3.0;
+  dfh = C * std::sqrt(std::abs((1.0 - y) / g_rho_diff));
+  fh = 2.0 * dfh * std::abs(g_rho_diff * (1.0 - y)) / 3.0;
+
+  nf = opening.calculate(false, -dp, multiplier, control, state0, state1, F, DF);
+  CHECK(nf == 2);
+  CHECK(F[0] == Approx(state0.sqrt_density * fh));
+  CHECK(F[1] == Approx(-state1.sqrt_density * f0));
+  CHECK(DF[0] == Approx(state0.sqrt_density * dfh));
+  CHECK(DF[1] == Approx(state1.sqrt_density * df0));
+
 }

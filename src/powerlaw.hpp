@@ -58,7 +58,7 @@ namespace airflownetwork {
 //double validate_temperature(double v, double default);
 //double validate_humidity_ratio(double v, double default);
 
-template <typename L, typename P> struct PowerLaw : public Element<L, P> // Surface crack component
+template <typename P> struct PowerLaw : public Element<P> // Surface crack component
 {
   
   const double coefficient;  // Air Mass Flow Coefficient [kg/s at 1Pa]
@@ -77,13 +77,14 @@ template <typename L, typename P> struct PowerLaw : public Element<L, P> // Surf
     m_rhoz_norm = P::density(referenceP, referenceT, referenceW);
   }
 
-  int calculate(bool const laminar,  // Initialization flag.If = 1, use laminar relationship
-    double const pdrop,              // Total pressure drop across a component (P1 - P2) [Pa]
-    L& linkage,                      // Linkage reference
-    const State<P>& propN,           // Node 1 properties
-    const State<P>& propM,           // Node 2 properties
-    std::array<double, 2>& F,        // Airflow through the component [kg/s]
-    std::array<double, 2>& DF        // Partial derivative:  DF/DP
+  virtual int calculate(bool const laminar,  // Initialization flag.If = 1, use laminar relationship
+    double const pdrop,                      // Total pressure drop across a component (P1 - P2) [Pa]
+    double multiplier,                       // Element multiplier
+    double control,                          // Control signal
+    const State<P>& propN,                   // Node 1 properties
+    const State<P>& propM,                   // Node 2 properties
+    std::array<double, 2>& F,                // Airflow through the component [kg/s]
+    std::array<double, 2>& DF                // Partial derivative:  DF/DP
   ) const
   {
     // SUBROUTINE INFORMATION:
@@ -106,8 +107,6 @@ template <typename L, typename P> struct PowerLaw : public Element<L, P> // Surf
     double VisAve{ 0.5 * (propN.viscosity + propM.viscosity) };
     double Tave{ 0.5 * (propN.temperature + propM.temperature) };
 
-    double multiplier{ linkage.factor };
-
     double sign{ 1.0 };
     double upwind_temperature{ propN.temperature };
     double upwind_density{ propN.density };
@@ -124,7 +123,7 @@ template <typename L, typename P> struct PowerLaw : public Element<L, P> // Surf
       abs_pdrop = -pdrop;
     }
 
-    double coef = coefficient * multiplier / upwind_sqrt_density;
+    double coef = coefficient * control * multiplier / upwind_sqrt_density;
     
     // Laminar calculation
     double RhoCor{ TOKELVIN(upwind_temperature) / TOKELVIN(Tave) };
@@ -196,7 +195,7 @@ double m_rhoz_norm;
 };
 
 
-template <typename L, typename P> struct ContamXPowerLaw : public Element<L,P> // Surface crack component
+template <typename P> struct ContamXPowerLaw : public Element<P> // Surface crack component
 {
 
   const double coefficient;  // Air Mass Flow Coefficient [kg/s at 1Pa]
@@ -224,7 +223,8 @@ template <typename L, typename P> struct ContamXPowerLaw : public Element<L,P> /
 
   virtual int calculate(bool const laminar,  // Initialization flag.If = 1, use laminar relationship
     double const pdrop,                      // Total pressure drop across a component (P1 - P2) [Pa]
-    L& linkage,                              // Linkage reference
+    double multiplier,                       // Element multiplier
+    double control,                          // Control signal
     const State<P>& propN,                   // Node 1 properties
     const State<P>& propM,                   // Node 2 properties
     std::array<double, 2>& F,                // Airflow through the component [kg/s]
@@ -232,7 +232,7 @@ template <typename L, typename P> struct ContamXPowerLaw : public Element<L,P> /
   ) const
   {
 
-    double multiplier{ linkage.factor };
+    double mult{ multiplier * control };
 
     double sign{ 1.0 };
     double upwind_temperature{ propN.temperature };
@@ -252,7 +252,7 @@ template <typename L, typename P> struct ContamXPowerLaw : public Element<L,P> /
     double dvisc = upwind_viscosity / upwind_density;
 
     // Laminar calculation
-    double cdm{ laminar_coefficient * multiplier * dvisc };
+    double cdm{ laminar_coefficient * mult * dvisc };
     double FL{ cdm * pdrop };
 
     if (laminar) {
@@ -261,7 +261,7 @@ template <typename L, typename P> struct ContamXPowerLaw : public Element<L,P> /
     } else {
       // Turbulent flow.
       double Tadj = adjustment(upwind_density, dvisc, exponent);
-      double FT = sign * Tadj * coefficient * multiplier * std::sqrt(0.5 * (propN.density + propM.density)) * pow(abs_pdrop, exponent);
+      double FT = sign * Tadj * coefficient * mult * std::sqrt(0.5 * (propN.density + propM.density)) * pow(abs_pdrop, exponent);
 
       // Select laminar or turbulent flow.
       if (std::abs(FL) <= std::abs(FT)) {

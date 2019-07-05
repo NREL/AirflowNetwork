@@ -464,6 +464,22 @@
                     </xs:choice>
                 </xs:complexType>
             </xs:element>
+            <xs:element name="OpeningDirection" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Specifies how the opening opens and closes</xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:enumeration value="Vertical"/>
+                        <xs:enumeration value="Horizontal"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="TreatClosedAsCrack" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>When the opening is closed, treat it as a crack with length equal to the perimeter</xs:documentation>
+                </xs:annotation>
+            </xs:element>
         </xs:sequence>
         <xs:attribute name="ID" type="xs:ID" use="required">
             <xs:annotation>
