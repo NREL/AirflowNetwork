@@ -48,6 +48,7 @@
 #define PROPERTIES_HPP
 
 #include <algorithm>
+#include <cmath>
 
 namespace airflownetwork {
 
