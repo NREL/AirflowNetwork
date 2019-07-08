@@ -472,7 +472,8 @@ private:
       node = el.child("DefaultState");
       if (node) {
         double p, T, W;
-        success &= load_state(node, "Node \"" + name + "\"", p, T, W);
+        std::string label = "Node \"" + name + "\"";
+        success &= load_state(node, label, p, T, W);
 
         switch (type) {
         case NodeType::Simulated:
@@ -761,7 +762,8 @@ private:
       node = element.child("ReferenceState");
       if (node) {
         double p0, T0, w0;
-        if (load_state(node, "Power law element \"" + id + "\"", p0, T0, w0)) {
+        std::string label = "Power law element \"" + id + "\"";
+        if (load_state(node, label, p0, T0, w0)) {
           powerlaw_elements.emplace_back(id, coefficient, laminar_coefficient, exponent, p0, T0, w0);
         } else {
           // TODO: Handle failure here
