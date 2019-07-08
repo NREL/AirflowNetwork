@@ -44,19 +44,13 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
-#ifndef POWERLAW_HPP
-#define POWERLAW_HPP
+#ifndef AIRFLOWNETWORK_POWERLAW_HPP
+#define AIRFLOWNETWORK_POWERLAW_HPP
 
 #include "element.hpp"
-#include "properties.hpp"
+//#include "properties.hpp"
 
 namespace airflownetwork {
-
-//double validate_coefficient(double v);
-//double validate_exponent(double v, double default);
-//double validate_pressure(double v, double default);
-//double validate_temperature(double v, double default);
-//double validate_humidity_ratio(double v, double default);
 
 template <typename P> struct PowerLaw : public Element<P> // Surface crack component
 {
@@ -69,7 +63,7 @@ template <typename P> struct PowerLaw : public Element<P> // Surface crack compo
   const double referenceW;   // Reference humidity ratio for crack data
 
   PowerLaw(const std::string &name, double coefficient, double laminar_coefficient, double exponent=0.65, double referenceP=101325.0, double referenceT=20.0,
-    double referenceW=0.0) : Element(name), coefficient(validate_coefficient(coefficient)), laminar_coefficient(validate_coefficient(laminar_coefficient)), 
+    double referenceW=0.0) : Element<P>(name), coefficient(validate_coefficient(coefficient)), laminar_coefficient(validate_coefficient(laminar_coefficient)), 
     exponent(validate_exponent(exponent,0.65)), referenceP(validate_pressure(referenceP, 101325.0)), referenceT(validate_pressure(referenceT, 20.0)),
     referenceW(validate_pressure(referenceW, 0.0))
   {
@@ -203,7 +197,7 @@ template <typename P> struct ContamXPowerLaw : public Element<P> // Surface crac
   const double exponent;     // Air Mass Flow exponent [dimensionless]
 
   // Default Constructor
-  ContamXPowerLaw(const std::string& name, double coefficient, double laminar_coefficient, double exponent = 0.65) : Element(name), coefficient(validate_coefficient(coefficient)),
+  ContamXPowerLaw(const std::string& name, double coefficient, double laminar_coefficient, double exponent = 0.65) : Element<P>(name), coefficient(validate_coefficient(coefficient)),
     laminar_coefficient(validate_coefficient(laminar_coefficient)), exponent(validate_exponent(exponent, 0.65))
   {}
 
@@ -294,4 +288,4 @@ template <typename P> struct ContamXPowerLaw : public Element<P> // Surface crac
 
 }
 
-#endif // !POWERLAW_HPP
+#endif // !AIRFLOWNETWORK_POWERLAW_HPP

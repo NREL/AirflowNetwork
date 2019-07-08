@@ -33,6 +33,7 @@
 #include <vector>
 #include <array>
 #include <fstream>
+#include <memory>
 #include "node.hpp"
 #include "material.hpp"
 #include "link.hpp"
@@ -470,18 +471,18 @@ private:
 
       node = el.child("DefaultState");
       if (node) {
-        double P, T, W;
-        success &= load_state(node, "Node \"" + name + "\"", P, T, W);
+        double p, T, W;
+        success &= load_state(node, "Node \"" + name + "\"", p, T, W);
 
         switch (type) {
         case NodeType::Simulated:
-          simulated_nodes.emplace_back(name, height, P, T, W);
+          simulated_nodes.emplace_back(name, height, p, T, W);
           break;
         case NodeType::Fixed:
-          fixed_nodes.emplace_back(name, height, P, T, W);
+          fixed_nodes.emplace_back(name, height, p, T, W);
           break;
         case NodeType::Calculated:
-          calculated_nodes.emplace_back(name, height, P, T, W);
+          calculated_nodes.emplace_back(name, height, p, T, W);
           break;
         }
       } else {
@@ -653,10 +654,10 @@ private:
     return success;
   }
 
-  bool load_state(const pugi::xml_node& state, std::string &label, double &P, double &T, double &W)
+  bool load_state(const pugi::xml_node& state, std::string &label, double &p, double &T, double &W)
   {
     T = P::temperature_0;
-    P = P::pressure_0;
+    p = P::pressure_0;
     W = P::humidity_ratio_0;
     bool success{ true };
     auto node = state.child("Temperature");
@@ -683,7 +684,7 @@ private:
 
     node = state.child("Pressure");
     if (node) {
-      P = node.text().as_double();
+      p = node.text().as_double();
       auto attr = node.attribute("units");
       if (!attr) {
         errors.push_back(label + " pressure is missing the required units attribute");
@@ -693,7 +694,7 @@ private:
       // Need more pressure units here
       std::string units_string = attr.as_string();
       if (units_string == "Pag") {
-        P += 101325.0;
+        p += 101325.0;
       } else if (units_string != "Pa") {
         errors.push_back(label + " pressure unit \"" + units_string + "\" is not recognized");
         return false;
