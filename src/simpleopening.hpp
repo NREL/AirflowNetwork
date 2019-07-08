@@ -61,7 +61,7 @@ template <typename P> struct SimpleOpening : public PowerLaw<P> // Surface crack
 
   SimpleOpening(const std::string &name, double height, double width, double min_diff, double discharge_coeff, double coefficient, double laminar_coefficient,
     double exponent=0.65, double referenceP=101325.0, double referenceT=20.0, double referenceW=0.0) : 
-    PowerLaw(name, coefficient, laminar_coefficient, exponent, referenceP, referenceT, referenceW), height(height), width(width),
+    PowerLaw<P>(name, coefficient, laminar_coefficient, exponent, referenceP, referenceT, referenceW), height(height), width(width),
     min_density_difference(validate_coefficient(min_diff)), discharge_coefficient(validate_coefficient(discharge_coeff))
   {}
 
