@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- edited with XMLSpy v2019 rel. 3 (x64) (http://www.altova.com) by Jason DeGraw (NREL) -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:afn="http://github.com/jasondegraw/AirflowNetwork" targetNamespace="http://github.com/jasondegraw/AirflowNetwork" elementFormDefault="qualified">
     <xs:annotation>
-        <xs:documentation>AirflowNetwork Schema - Version 1.1 (April 19, 2019)</xs:documentation>
+        <xs:documentation>AirflowNetwork Schema - Version X.X.X (April 19, 2019)</xs:documentation>
     </xs:annotation>
     <xs:element name="AirflowNetwork">
         <xs:complexType>
@@ -269,7 +268,7 @@
             </xs:element>
             <xs:element name="Exponent">
                 <xs:annotation>
-                    <xs:documentation>Power law flow exponent</xs:documentation>
+                    <xs:documentation>Power-law flow exponent, typically taken to be close to 0.65 for cracks. Generally, lower values are used for larger openings while higher values are used for narrower openings.</xs:documentation>
                 </xs:annotation>
                 <xs:simpleType>
                     <xs:restriction base="xs:double">
@@ -283,35 +282,7 @@
                     <xs:documentation>Reference state of the power law element</xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element name="Transition">
-                <xs:annotation>
-                    <xs:documentation>Specify how small pressure differences are to be handled</xs:documentation>
-                </xs:annotation>
-                <xs:complexType>
-                    <xs:choice>
-                        <xs:element name="ByMinimum" type="xs:string" fixed="">
-                            <xs:annotation>
-                                <xs:documentation>Power law flow transition by minimum flow from laminar and turbulent calculations</xs:documentation>
-                            </xs:annotation>
-                        </xs:element>
-                        <xs:element name="ReynoldsNumber">
-                            <xs:annotation>
-                                <xs:documentation>Power law flow transition Reynolds number</xs:documentation>
-                            </xs:annotation>
-                            <xs:simpleType>
-                                <xs:restriction base="xs:double">
-                                    <xs:minExclusive value="0.0"/>
-                                </xs:restriction>
-                            </xs:simpleType>
-                        </xs:element>
-                        <xs:element name="PressureDifference" type="afn:PressureQuantityType">
-                            <xs:annotation>
-                                <xs:documentation>Power law flow transition pressure difference</xs:documentation>
-                            </xs:annotation>
-                        </xs:element>
-                    </xs:choice>
-                </xs:complexType>
-            </xs:element>
+            <xs:element name="Transition" type="afn:TransitionType"/>
             <xs:element name="CoefficientRelationship" minOccurs="0">
                 <xs:annotation>
                     <xs:documentation>Specify how laminar and turbulent coefficents are related, if at all</xs:documentation>
@@ -484,6 +455,65 @@
         <xs:attribute name="ID" type="xs:ID" use="required">
             <xs:annotation>
                 <xs:documentation>Name of power law element, must be unique</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="OrificeType">
+        <xs:annotation>
+            <xs:documentation>Simple orifice flow element</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="Name" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Name of the orifice flow element</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Description" type="xs:string" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Description of the detailed opening element</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="CrossSectionalArea" type="afn:AreaQuantityType">
+                <xs:annotation>
+                    <xs:documentation>Cross-sectional area of the orifice</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Exponent">
+                <xs:annotation>
+                    <xs:documentation>Flow exponent for the power-law model. Typical values vary from 0.5 (large openings dominated by dynamic effects) to 1.0 (narrow openings dominated by viscous effects), with 0.65 as a value often used to represent cracks.</xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                    <xs:restriction base="xs:double">
+                        <xs:minInclusive value="0.5"/>
+                        <xs:maxInclusive value="1.0"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="DischargeCoefficient">
+                <xs:annotation>
+                    <xs:documentation>Fractional effectiveness of airflow</xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                    <xs:restriction base="xs:double">
+                        <xs:minExclusive value="0.0"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="HydraulicDiameter" type="afn:LengthQuantityType" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Hydraulic diameter of the orifice, defaults to a circular cross section.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ReferenceState" type="afn:AirStateType" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Reference state for the power-law model</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Transition" type="afn:TransitionType"/>
+        </xs:sequence>
+        <xs:attribute name="ID" type="xs:ID" use="required">
+            <xs:annotation>
+                <xs:documentation>Name of orifice element, must be unique</xs:documentation>
             </xs:annotation>
         </xs:attribute>
     </xs:complexType>
@@ -1353,6 +1383,34 @@
                 </xs:attribute>
             </xs:extension>
         </xs:simpleContent>
+    </xs:complexType>
+    <!-- Other Types -->
+    <xs:complexType name="TransitionType">
+        <xs:annotation>
+            <xs:documentation>Specify how small pressure differences are to be handled. While this is often treated as a transition from turbulent to laminar flow (or vice versa), but in most cases there's no real justification for this approach beyond numerical convenience.</xs:documentation>
+        </xs:annotation>
+        <xs:choice>
+            <xs:element name="ByMinimum" type="xs:string" fixed="">
+                <xs:annotation>
+                    <xs:documentation>Power law flow transition by minimum flow from laminar and turbulent calculations</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="ReynoldsNumber">
+                <xs:annotation>
+                    <xs:documentation>Power law flow transition Reynolds number</xs:documentation>
+                </xs:annotation>
+                <xs:simpleType>
+                    <xs:restriction base="xs:double">
+                        <xs:minExclusive value="0.0"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="PressureDifference" type="afn:PressureQuantityType">
+                <xs:annotation>
+                    <xs:documentation>Power law flow transition pressure difference</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:choice>
     </xs:complexType>
     <xs:simpleType name="InterpolationEnum">
         <xs:restriction base="xs:string">

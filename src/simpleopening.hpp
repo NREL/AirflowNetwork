@@ -52,7 +52,175 @@
 
 namespace airflownetwork {
 
-template <typename P> struct SimpleOpening : public PowerLaw<P> // Surface crack component
+
+template <typename P> struct BasicOpening : public PowerLaw<P> // Very basic opening component
+{
+  const double height;
+  const double width;
+  const double discharge_coefficient;
+
+  BasicOpening(const std::string &name, double height, double width, double min_diff, double discharge_coeff, double coefficient, double laminar_coefficient,
+    double exponent=0.65, double referenceP=101325.0, double referenceT=20.0, double referenceW=0.0) : 
+    PowerLaw<P>(name, coefficient, laminar_coefficient, exponent, referenceP, referenceT, referenceW), height(height), width(width),
+    min_density_difference(validate_coefficient(min_diff)), discharge_coefficient(validate_coefficient(discharge_coeff))
+  {}
+
+  virtual int calculate(bool const laminar,  // Initialization flag.If = 1, use laminar relationship
+    double const pdrop,                      // Total pressure drop across a component (P1 - P2) [Pa]
+    double multiplier,                       // Element multiplier
+    double control,                          // Control signal
+    const State<P>& propN,                   // Node 1 properties
+    const State<P>& propM,                   // Node 2 properties
+    std::array<double, 2> & F,               // Airflow through the component [kg/s]
+    std::array<double, 2> & DF               // Partial derivative:  DF/DP
+  ) const
+  {
+
+    // SUBROUTINE INFORMATION:
+    //       AUTHOR         George Walton
+    //       DATE WRITTEN   Extracted from AIRNET
+    //       MODIFIED       Lixing Gu, 2/1/04
+    //                      Revised the subroutine to meet E+ needs
+    //       MODIFIED       Lixing Gu, 6/8/05
+    //       RE-ENGINEERED  Jason DeGraw, 7/9/2019
+
+    // PURPOSE OF THIS SUBROUTINE:
+    // This subroutine solves airflow for a Doorway airflow component using standard interface.
+    // A doorway may have two-way airflows. Heights measured relative to the bottom of the door.
+
+    // METHODOLOGY EMPLOYED:
+    // na
+
+    // REFERENCES:
+    // na
+
+    // SUBROUTINE PARAMETER DEFINITIONS:
+    double const SQRT2(1.414213562373095);
+
+    // SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+    double DPMID; // pressure drop at mid-height of doorway.
+    double C;
+    double DF0;   // derivative factor at the bottom of the door.
+    double DFH;   // derivative factor at the top of the door.
+
+    double F0;    // flow factor at the bottom of the door.
+    double FH;    // flow factor at the top of the door.
+    double Y;     // height of neutral plane rel. to bottom of door (m).
+
+    int NF{ 1 };
+
+    // Formats
+    // static gio::Fmt Format_900("(A5,9X,4E16.7)");
+    // static gio::Fmt Format_903("(A5,3I3,4E16.7)");
+
+    // Move this all to a per-link precalculation?
+    double Width{ width };
+    double Height{ height };
+    double coeff{ coefficient };
+
+    if (pdrop >= 0.0) {
+      coeff /= propN.sqrt_density;
+    } else {
+      coeff /= propM.sqrt_density;
+    }
+
+    if (control == 0.0) { // The window is closed
+      generic_crack(laminar, coeff * 2.0 * (width + height), exponent, pdrop, propN, propM, F, DF);
+      return 1;
+    }
+
+    //double coeff = coefficient*2.0 * (Width + Height); // This has consequences for the open laminar case, the crack length should not be involved
+    //double OpenFactor{ control };
+    
+    if (OpenFactor > 0.0) {
+      Width *= OpenFactor;
+      //if (linkage.tilt < 90.0) {
+      //  Height *= linkage.sin_tilt;
+      //}
+    }
+
+    //if (pdrop >= 0.0) {
+    //  coeff /= propN.sqrt_density;
+    //} else {
+    //  coeff /= propM.sqrt_density;
+    //}
+
+    // Add window multiplier with window close
+    if (multiplier > 1.0) coeff *= multiplier;
+    // Add window multiplier with window open
+    if (OpenFactor > 0.0) {
+      if (multiplier > 1.0) Width *= multiplier;
+    }
+
+    double DRHO{ propN.density - propM.density }; // difference in air densities between rooms.
+    double GDRHO{ 9.8 * DRHO };
+
+    //if (OpenFactor == 0.0) {
+    //  generic_crack(laminar, coeff, exponent, pdrop, propN, propM, F, DF);
+    //  return 1;
+    //}
+    if (std::abs(DRHO) <= 0.0001 * std::abs(pdrop)) {
+      DPMID = pdrop - 0.5 * Height * GDRHO;
+      // Initialization or identical temps: treat as one-way flow.
+      generic_crack(laminar, coeff, exponent, DPMID, propN, propM, F, DF);
+    } else {
+      // Possible two-way flow:
+      Y = pdrop / GDRHO;
+
+      // F0 = lower flow, FH = upper flow.
+      C = SQRT2 * Width * discharge_coefficient;
+      DF0 = C * std::sqrt(std::abs(pdrop)) / std::abs(GDRHO);
+      //        F0 = 0.666667d0*C*SQRT(ABS(GDRHO*Y))*ABS(Y)
+      F0 = (2.0 / 3.0) * C * std::sqrt(std::abs(GDRHO * Y)) * std::abs(Y);
+      DFH = C * std::sqrt(std::abs((Height - Y) / GDRHO));
+      //        FH = 0.666667d0*DFH*ABS(GDRHO*(Height-Y))
+      FH = (2.0 / 3.0) * DFH * std::abs(GDRHO * (Height - Y));
+
+      if (Y <= 0.0) {
+        // One-way flow (negative).
+        if (DRHO >= 0.0) {
+          F[0] = -propM.sqrt_density * std::abs(FH - F0);
+          DF[0] = propM.sqrt_density * std::abs(DFH - DF0);
+        } else {
+          F[0] = propN.sqrt_density * std::abs(FH - F0);
+          DF[0] = propN.sqrt_density * std::abs(DFH - DF0);
+        }
+      } else if (Y >= Height) {
+        // One-way flow (positive).
+        if (DRHO >= 0.0) {
+          F[0] = propN.sqrt_density * std::abs(FH - F0);
+          DF[0] = propN.sqrt_density * std::abs(DFH - DF0);
+        } else {
+          F[0] = -propM.sqrt_density * std::abs(FH - F0);
+          DF[0] = propM.sqrt_density * std::abs(DFH - DF0);
+        }
+      } else {
+        // Two-way flow.
+        NF = 2;
+        if (DRHO >= 0.0) {
+          F[0] = -propM.sqrt_density * FH;
+          DF[0] = propM.sqrt_density * DFH;
+          F[1] = propN.sqrt_density * F0;
+          DF[1] = propN.sqrt_density * DF0;
+        } else {
+          F[0] = propN.sqrt_density * FH;
+          DF[0] = propN.sqrt_density * DFH;
+          F[1] = -propM.sqrt_density * F0;
+          DF[1] = propM.sqrt_density * DF0;
+        }
+      }
+    }
+
+    return NF;
+  }
+
+private:
+  // Nothing to see here
+
+};
+
+
+template <typename P> struct SimpleOpening : public PowerLaw<P> // Simple opening component
 {
   const double height;
   const double width;
@@ -143,13 +311,13 @@ template <typename P> struct SimpleOpening : public PowerLaw<P> // Surface crack
     double GDRHO{ 9.8 * DRHO };
 
     if (OpenFactor == 0.0) {
-      genericCrack(laminar, coeff, exponent, pdrop, propN, propM, F, DF);
+      generic_crack(laminar, coeff, exponent, pdrop, propN, propM, F, DF);
       return 1;
     }
     if (std::abs(DRHO) < min_density_difference || laminar) {
       DPMID = pdrop - 0.5 * Height * GDRHO;
       // Initialization or identical temps: treat as one-way flow.
-      genericCrack(laminar, coeff, exponent, DPMID, propN, propM, F, DF);
+      generic_crack(laminar, coeff, exponent, DPMID, propN, propM, F, DF);
     } else {
       // Possible two-way flow:
       Y = pdrop / GDRHO;

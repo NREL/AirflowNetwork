@@ -45,26 +45,26 @@ TEST_CASE("Test the generic crack function", "[genericCrack]")
   //CHECK(C == Approx(.001 * std::sqrt(1.2041) / 0.0000181625));
 
   // Laminar tests
-  airflownetwork::genericCrack(true, 0.001, 0.65, dp, state0, state1, F, DF);
+  airflownetwork::generic_crack(true, 0.001, 0.65, dp, state0, state1, F, DF);
   CHECK(F[0] == .01 * std::sqrt(1.2041) / 0.0000181625);
   CHECK(F[1] == 0.0);
   CHECK(DF[0] == Approx(.001 * std::sqrt(1.2041) / 0.0000181625));
   CHECK(DF[1] == 0.0);
 
-  airflownetwork::genericCrack(true, 0.001, 0.65, -dp, state0, state1, F, DF);
+  airflownetwork::generic_crack(true, 0.001, 0.65, -dp, state0, state1, F, DF);
   CHECK(F[0] == -.01 * std::sqrt(1.2041) / 0.0000181625);
   CHECK(F[1] == 0.0);
   CHECK(DF[0] == Approx(.001 * std::sqrt(1.2041) / 0.0000181625));
   CHECK(DF[1] == 0.0);
 
   // Turbulent tests
-  airflownetwork::genericCrack(false, 0.001, 0.65, dp, state0, state1, F, DF);
+  airflownetwork::generic_crack(false, 0.001, 0.65, dp, state0, state1, F, DF);
   CHECK(F[0] == .001 * std::pow(10.0, 0.65));
   CHECK(F[1] == 0.0);
   CHECK(DF[0] == Approx(.000065 * std::pow(10.0, 0.65)));
   CHECK(DF[1] == 0.0);
 
-  airflownetwork::genericCrack(false, 0.001, 0.65, -dp, state0, state1, F, DF);
+  airflownetwork::generic_crack(false, 0.001, 0.65, -dp, state0, state1, F, DF);
   CHECK(F[0] == -.001 * std::pow(10.0, 0.65));
   CHECK(F[1] == 0.0);
   CHECK(DF[0] == Approx(.000065 * std::pow(10.0, 0.65)));

@@ -48,7 +48,6 @@
 #define AIRFLOWNETWORK_POWERLAW_HPP
 
 #include "element.hpp"
-//#include "properties.hpp"
 
 namespace airflownetwork {
 

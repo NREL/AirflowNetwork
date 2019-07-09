@@ -44,6 +44,7 @@ inline double validate_coefficient(double v)
   return std::abs(v);
 }
 
+
 inline double validate_exponent(double v, double default_value)
 {
   if (v < 0.5 || v > 1.0) {
@@ -51,6 +52,7 @@ inline double validate_exponent(double v, double default_value)
   }
   return v;
 }
+
 
 inline double validate_pressure(double v, double default_value)
 {
@@ -60,6 +62,7 @@ inline double validate_pressure(double v, double default_value)
   return v;
 }
 
+
 inline double validate_temperature(double v, double default_value)
 {
   if (v <= -273.15) {
@@ -67,6 +70,7 @@ inline double validate_temperature(double v, double default_value)
   }
   return v;
 }
+
 
 inline double validate_humidity_ratio(double v, double default_value)
 {
@@ -76,17 +80,18 @@ inline double validate_humidity_ratio(double v, double default_value)
   return v;
 }
 
-template<typename P> void genericCrack(bool const laminar, // Initialization flag.If = 1, use laminar relationship
-  double const coefficient,                                // Flow coefficient
-  double const exponent,                                   // Flow exponent
-  double const pdrop,                                      // Total pressure drop across a component (P1 - P2) [Pa]
-  const State<P>& propN,                                   // Node 1 properties
-  const State<P>& propM,                                   // Node 2 properties
-  std::array<double, 2> & F,                               // Airflow through the component [kg/s]
-  std::array<double, 2> & DF,                              // Partial derivative:  DF/DP
-  double const referenceP = 101325.0,                      // Reference pressure
-  double const referenceT = 20.0,                          // Reference temperature
-  double const referenceW = 0.0                            // Reference humidity ratio
+
+template<typename P> void generic_crack(bool const laminar, // Initialization flag.If true, use laminar relationship
+  double const coefficient,                                 // Flow coefficient
+  double const exponent,                                    // Flow exponent
+  double const pdrop,                                       // Total pressure drop across a component (P1 - P2) [Pa]
+  const State<P>& propN,                                    // Node 1 properties
+  const State<P>& propM,                                    // Node 2 properties
+  std::array<double, 2> & F,                                // Airflow through the component [kg/s]
+  std::array<double, 2> & DF,                               // Partial derivative:  DF/DP
+  double const referenceP = 101325.0,                       // Reference pressure
+  double const referenceT = 20.0,                           // Reference temperature
+  double const referenceW = 0.0                             // Reference humidity ratio
 )
 {
 
@@ -164,6 +169,145 @@ template<typename P> void genericCrack(bool const laminar, // Initialization fla
 
   return;
 }
+
+
+template<typename N> void generic_duct(bool const laminar, // Initialization flag.If true, use laminar relationship
+  double const Length,                                     // Duct length
+  double const Diameter,                                   // Duct diameter
+  double const PDROP,                                      // Total pressure drop across a component (P1 - P2) [Pa]
+  const N& propN,                                          // Node 1 properties
+  const N& propM,                                          // Node 2 properties
+  std::array<double, 2> & F,                               // Airflow through the component [kg/s]
+  std::array<double, 2> & DF                               // Partial derivative:  DF/DP
+)
+{
+
+  // This subroutine solve air flow as a duct if fan has zero flow rate
+
+  // Locals
+  // SUBROUTINE ARGUMENT DEFINITIONS:
+
+  // SUBROUTINE PARAMETER DEFINITIONS:
+  double const C(0.868589);
+  double const EPS(0.001);
+  double const Rough(0.0001);
+  double const InitLamCoef(128.0);
+  double const LamDynCoef(64.0);
+  double const LamFriCoef(0.0001);
+  double const TurDynCoef(0.0001);
+
+  // INTERFACE BLOCK SPECIFICATIONS
+  // na
+
+  // DERIVED TYPE DEFINITIONS
+  // na
+
+  // SUBROUTINE LOCAL VARIABLE DECLARATIONS:
+  double A0;
+  double A1;
+  double A2;
+  double B;
+  double D;
+  double S2;
+  double CDM;
+  double FL;
+  double FT;
+  double FTT;
+  double RE;
+
+  // FLOW:
+  // Get component properties
+  double ed = Rough / Diameter;
+  double area = Diameter * Diameter * Pi / 4.0;
+  double ld = Length / Diameter;
+  double g = 1.14 - 0.868589 * std::log(ed);
+  double AA1 = g;
+
+  if (laminar) {
+    // Initialization by linear relation.
+    if (PDROP >= 0.0) {
+      DF[0] = (2.0 * propN.density * area * Diameter) / (propN.viscosity * InitLamCoef * ld);
+    } else {
+      DF[0] = (2.0 * propM.density * area * Diameter) / (propM.viscosity * InitLamCoef * ld);
+    }
+    F[0] = -DF[0] * PDROP;
+  } else {
+    // Standard calculation.
+    if (PDROP >= 0.0) {
+      // Flow in positive direction.
+      // Laminar flow coefficient !=0
+      if (LamFriCoef >= 0.001) {
+        A2 = LamFriCoef / (2.0 * propN.density * area * area);
+        A1 = (propN.viscosity * LamDynCoef * ld) / (2.0 * propN.density * area * Diameter);
+        A0 = -PDROP;
+        CDM = std::sqrt(A1 * A1 - 4.0 * A2 * A0);
+        FL = (CDM - A1) / (2.0 * A2);
+        CDM = 1.0 / CDM;
+      } else {
+        CDM = (2.0 * propN.density * area * Diameter) / (propN.viscosity * LamDynCoef * ld);
+        FL = CDM * PDROP;
+      }
+      RE = FL * Diameter / (propN.viscosity * area);
+      // Turbulent flow; test when Re>10.
+      if (RE >= 10.0) {
+        S2 = std::sqrt(2.0 * propN.density * PDROP) * area;
+        FTT = S2 / std::sqrt(ld / pow_2(g) + TurDynCoef);
+        while (true) {
+          FT = FTT;
+          B = (9.3 * propN.viscosity * area) / (FT * Rough);
+          D = 1.0 + g * B;
+          g -= (g - AA1 + C * std::log(D)) / (1.0 + C * B / D);
+          FTT = S2 / std::sqrt(ld / pow_2(g) + TurDynCoef);
+          if (std::abs(FTT - FT) / FTT < EPS) break;
+        }
+        FT = FTT;
+      } else {
+        FT = FL;
+      }
+    } else {
+      // Flow in negative direction.
+      // Laminar flow coefficient !=0
+      if (LamFriCoef >= 0.001) {
+        A2 = LamFriCoef / (2.0 * propM.density * area * area);
+        A1 = (propM.viscosity * LamDynCoef * ld) / (2.0 * propM.density * area * Diameter);
+        A0 = PDROP;
+        CDM = std::sqrt(A1 * A1 - 4.0 * A2 * A0);
+        FL = -(CDM - A1) / (2.0 * A2);
+        CDM = 1.0 / CDM;
+      } else {
+        CDM = (2.0 * propM.density * area * Diameter) / (propM.viscosity * LamDynCoef * ld);
+        FL = CDM * PDROP;
+      }
+      RE = -FL * Diameter / (propM.viscosity * area);
+      // Turbulent flow; test when Re>10.
+      if (RE >= 10.0) {
+        S2 = std::sqrt(-2.0 * propM.density * PDROP) * area;
+        FTT = S2 / std::sqrt(ld / pow_2(g) + TurDynCoef);
+        while (true) {
+          FT = FTT;
+          B = (9.3 * propM.viscosity * area) / (FT * Rough);
+          D = 1.0 + g * B;
+          g -= (g - AA1 + C * std::log(D)) / (1.0 + C * B / D);
+          FTT = S2 / std::sqrt(ld / pow_2(g) + TurDynCoef);
+          if (std::abs(FTT - FT) / FTT < EPS) break;
+        }
+        FT = -FTT;
+      } else {
+        FT = FL;
+      }
+    }
+    // Select laminar or turbulent flow.
+    if (std::abs(FL) <= std::abs(FT)) {
+      F[0] = FL;
+      DF[0] = CDM;
+    } else {
+      F[0] = FT;
+      DF[0] = 0.5 * FT / PDROP;
+    }
+  }
+  return;
+}
+
 
 template<typename P> void genericCrack0(bool const laminar, // Initialization flag.If = 1, use laminar relationship
   double const coefficient,                                 // Flow coefficient
