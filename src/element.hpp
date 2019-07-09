@@ -217,6 +217,7 @@ template<typename N> void generic_duct(bool const laminar, // Initialization fla
 
   // FLOW:
   // Get component properties
+  /*
   double ed = Rough / Diameter;
   double area = Diameter * Diameter * Pi / 4.0;
   double ld = Length / Diameter;
@@ -305,6 +306,7 @@ template<typename N> void generic_duct(bool const laminar, // Initialization fla
       DF[0] = 0.5 * FT / PDROP;
     }
   }
+  */
   return;
 }
 
