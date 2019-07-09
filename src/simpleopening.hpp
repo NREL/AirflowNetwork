@@ -62,7 +62,7 @@ template <typename P> struct BasicOpening : public PowerLaw<P> // Very basic ope
   BasicOpening(const std::string &name, double height, double width, double min_diff, double discharge_coeff, double coefficient, double laminar_coefficient,
     double exponent=0.65, double referenceP=101325.0, double referenceT=20.0, double referenceW=0.0) : 
     PowerLaw<P>(name, coefficient, laminar_coefficient, exponent, referenceP, referenceT, referenceW), height(height), width(width),
-    min_density_difference(validate_coefficient(min_diff)), discharge_coefficient(validate_coefficient(discharge_coeff))
+    discharge_coefficient(validate_coefficient(discharge_coeff))
   {}
 
   virtual int calculate(bool const laminar,  // Initialization flag.If = 1, use laminar relationship
@@ -116,7 +116,7 @@ template <typename P> struct BasicOpening : public PowerLaw<P> // Very basic ope
     // Move this all to a per-link precalculation?
     double Width{ width };
     double Height{ height };
-    double coeff{ coefficient };
+    double coeff{ this->coefficient };
 
     if (pdrop >= 0.0) {
       coeff /= propN.sqrt_density;
@@ -125,15 +125,15 @@ template <typename P> struct BasicOpening : public PowerLaw<P> // Very basic ope
     }
 
     if (control == 0.0) { // The window is closed
-      generic_crack(laminar, coeff * 2.0 * (width + height), exponent, pdrop, propN, propM, F, DF);
+      generic_crack(laminar, coeff * 2.0 * (width + height), this->exponent, pdrop, propN, propM, F, DF);
       return 1;
     }
 
     //double coeff = coefficient*2.0 * (Width + Height); // This has consequences for the open laminar case, the crack length should not be involved
     //double OpenFactor{ control };
     
-    if (OpenFactor > 0.0) {
-      Width *= OpenFactor;
+    if (control > 0.0) {
+      Width *= control;
       //if (linkage.tilt < 90.0) {
       //  Height *= linkage.sin_tilt;
       //}
@@ -148,7 +148,7 @@ template <typename P> struct BasicOpening : public PowerLaw<P> // Very basic ope
     // Add window multiplier with window close
     if (multiplier > 1.0) coeff *= multiplier;
     // Add window multiplier with window open
-    if (OpenFactor > 0.0) {
+    if (control > 0.0) {
       if (multiplier > 1.0) Width *= multiplier;
     }
 
@@ -162,7 +162,7 @@ template <typename P> struct BasicOpening : public PowerLaw<P> // Very basic ope
     if (std::abs(DRHO) <= 0.0001 * std::abs(pdrop)) {
       DPMID = pdrop - 0.5 * Height * GDRHO;
       // Initialization or identical temps: treat as one-way flow.
-      generic_crack(laminar, coeff, exponent, DPMID, propN, propM, F, DF);
+      generic_crack(laminar, coeff, this->exponent, DPMID, propN, propM, F, DF);
     } else {
       // Possible two-way flow:
       Y = pdrop / GDRHO;
