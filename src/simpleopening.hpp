@@ -284,7 +284,7 @@ template <typename P> struct SimpleOpening : public PowerLaw<P> // Simple openin
     // Move this all to a per-link precalculation?
     double Width{ width };
     double Height{ height };
-    double coeff = coefficient * 2.0 * (Width + Height); // This has consequences for the open laminar case, the crack length should not be involved
+    double coeff = this->coefficient * 2.0 * (Width + Height); // This has consequences for the open laminar case, the crack length should not be involved
     double OpenFactor{ control };
     
     if (OpenFactor > 0.0) {
@@ -311,13 +311,13 @@ template <typename P> struct SimpleOpening : public PowerLaw<P> // Simple openin
     double GDRHO{ 9.8 * DRHO };
 
     if (OpenFactor == 0.0) {
-      generic_crack(laminar, coeff, exponent, pdrop, propN, propM, F, DF);
+      generic_crack(laminar, coeff, this->exponent, pdrop, propN, propM, F, DF);
       return 1;
     }
     if (std::abs(DRHO) < min_density_difference || laminar) {
       DPMID = pdrop - 0.5 * Height * GDRHO;
       // Initialization or identical temps: treat as one-way flow.
-      generic_crack(laminar, coeff, exponent, DPMID, propN, propM, F, DF);
+      generic_crack(laminar, coeff, this->exponent, DPMID, propN, propM, F, DF);
     } else {
       // Possible two-way flow:
       Y = pdrop / GDRHO;

@@ -305,10 +305,10 @@ template <typename I, typename P> struct Model
     return true;
   }
 
-  bool explicit_transport(I cxi, std::vector<double>& CN, std::vector<double>& C0)
-  {
-
-  }
+  //bool explicit_transport(I cxi, std::vector<double>& CN, std::vector<double>& C0)
+  //{
+  //
+  //}
 
 private:
   bool setup()
