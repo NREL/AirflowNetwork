@@ -473,11 +473,18 @@
                     <xs:documentation>Description of the detailed opening element</xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element name="CrossSectionalArea" type="afn:AreaQuantityType">
-                <xs:annotation>
-                    <xs:documentation>Cross-sectional area of the orifice</xs:documentation>
-                </xs:annotation>
-            </xs:element>
+            <xs:choice>
+                <xs:element name="CrossSectionalArea" type="afn:AreaQuantityType">
+                    <xs:annotation>
+                        <xs:documentation>Cross-sectional area of the orifice</xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+                <xs:element name="HydraulicDiameter" type="afn:LengthQuantityType" minOccurs="0">
+                    <xs:annotation>
+                        <xs:documentation>Hydraulic diameter of the orifice.</xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+            </xs:choice>
             <xs:element name="Exponent">
                 <xs:annotation>
                     <xs:documentation>Flow exponent for the power-law model. Typical values vary from 0.5 (large openings dominated by dynamic effects) to 1.0 (narrow openings dominated by viscous effects), with 0.65 as a value often used to represent cracks.</xs:documentation>
@@ -498,11 +505,6 @@
                         <xs:minExclusive value="0.0"/>
                     </xs:restriction>
                 </xs:simpleType>
-            </xs:element>
-            <xs:element name="HydraulicDiameter" type="afn:LengthQuantityType" minOccurs="0">
-                <xs:annotation>
-                    <xs:documentation>Hydraulic diameter of the orifice, defaults to a circular cross section.</xs:documentation>
-                </xs:annotation>
             </xs:element>
             <xs:element name="ReferenceState" type="afn:AirStateType" minOccurs="0">
                 <xs:annotation>

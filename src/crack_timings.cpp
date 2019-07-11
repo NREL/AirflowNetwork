@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
   // Calculate with genericCrack0
   auto start0 = std::chrono::high_resolution_clock::now();
   for (size_t i = 0; i < M.size(); i++) {
-    airflownetwork::genericCrack0(false, 0.0001, 0.65, pdrop[i], M[i], N[i], F, DF);
+    airflownetwork::generic_crack0(false, 0.0001, 0.65, pdrop[i], M[i], N[i], F, DF);
     flow0[i] = F[0];
   }
   auto stop0 = std::chrono::high_resolution_clock::now();

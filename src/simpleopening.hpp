@@ -60,12 +60,12 @@ template <typename P> struct BasicOpening : public PowerLaw<P> // Very basic ope
   const double discharge_coefficient;
 
   BasicOpening(const std::string &name, double height, double width, double min_diff, double discharge_coeff, double coefficient, double laminar_coefficient,
-    double exponent=0.65, double referenceP=101325.0, double referenceT=20.0, double referenceW=0.0) : 
+    double exponent=0.5, double referenceP=101325.0, double referenceT=20.0, double referenceW=0.0) : 
     PowerLaw<P>(name, coefficient, laminar_coefficient, exponent, referenceP, referenceT, referenceW), height(height), width(width),
     discharge_coefficient(validate_coefficient(discharge_coeff))
   {}
 
-  virtual int calculate(bool const laminar,  // Initialization flag.If = 1, use laminar relationship
+  virtual int calculate(bool const laminar,  // Initialization flag. If true, use laminar relationship
     double const pdrop,                      // Total pressure drop across a component (P1 - P2) [Pa]
     double multiplier,                       // Element multiplier
     double control,                          // Control signal
@@ -117,15 +117,11 @@ template <typename P> struct BasicOpening : public PowerLaw<P> // Very basic ope
     double Width{ width };
     double Height{ height };
     double coeff{ this->coefficient };
+    double A{ width * height };
 
-    if (pdrop >= 0.0) {
-      coeff /= propN.sqrt_density;
-    } else {
-      coeff /= propM.sqrt_density;
-    }
-
-    if (control == 0.0) { // The window is closed
-      generic_crack(laminar, coeff * 2.0 * (width + height), this->exponent, pdrop, propN, propM, F, DF);
+    if (control == 0.0) { // The window is closed, both coefficients should include the perimeter crack length
+      generic_crack(laminar, multiplier*this->laminar_coefficient, multiplier * this->coefficient, this->exponent,
+        pdrop, propN, propM, F, DF);
       return 1;
     }
 
