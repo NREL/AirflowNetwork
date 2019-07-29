@@ -145,25 +145,25 @@ template<typename P> void generic_crack(bool const laminar, // Initialization fl
   double Ctl{ std::pow(RhozNorm / upwind_density / RhoCor, exponent - 1.0) * std::pow(VisczNorm / VisAve, 2.0 * exponent - 1.0) };
   double CDM{ coef * upwind_density / upwind_viscosity * Ctl };
   double FL{ CDM * pdrop };
-  double FT;
 
   if (laminar) {
     DF[0] = CDM;
     F[0] = FL;
   } else {
     // Turbulent flow.
+    double abs_FT;
     if (exponent == 0.5) {
-      FT = sign * coef * upwind_sqrt_density * std::sqrt(abs_pdrop) * Ctl;
+      abs_FT = coef * upwind_sqrt_density * std::sqrt(abs_pdrop) * Ctl;
     } else {
-      FT = sign * coef * upwind_sqrt_density * std::pow(abs_pdrop, exponent) * Ctl;
+      abs_FT = coef * upwind_sqrt_density * std::pow(abs_pdrop, exponent) * Ctl;
     }
     // Select laminar or turbulent flow.
-    if (std::abs(FL) <= std::abs(FT)) {
+    if (std::abs(FL) <= abs_FT) {
       F[0] = FL;
       DF[0] = CDM;
     } else {
-      F[0] = FT;
-      DF[0] = FT * exponent / pdrop;
+      F[0] = sign * abs_FT;
+      DF[0] = F[0] * exponent / pdrop;
     }
   }
 
@@ -240,19 +240,19 @@ template<typename P> void generic_crack(bool const laminar, // Initialization fl
     F[0] = FL;
   } else {
     // Turbulent flow.
-    double FT;
+    double abs_FT;
     if (exponent == 0.5) {
-      FT = sign * coefficient * std::sqrt(abs_pdrop) * Ctl;
+      abs_FT = coefficient * std::sqrt(abs_pdrop) * Ctl;
     } else {
-      FT = sign * coefficient * std::pow(abs_pdrop, exponent) * Ctl;
+      abs_FT = coefficient * std::pow(abs_pdrop, exponent) * Ctl;
     }
     // Select laminar or turbulent flow.
-    if (std::abs(FL) <= std::abs(FT)) {
+    if (std::abs(FL) <= abs_FT) {
       F[0] = FL;
       DF[0] = CDM;
     } else {
-      F[0] = FT;
-      DF[0] = FT * exponent / pdrop;
+      F[0] = sign * abs_FT;
+      DF[0] = F[0] * exponent / pdrop;
     }
   }
 

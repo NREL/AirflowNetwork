@@ -3,6 +3,7 @@ project(executable)
 set(srcs properties.cpp)
 
 set(hdrs properties.hpp
+         filters.hpp
          node.hpp
          material.hpp
          model.hpp
@@ -10,8 +11,10 @@ set(hdrs properties.hpp
          element.hpp
          powerlaw.hpp
          results.hpp
-         simpleopening.hpp)
+         simpleopening.hpp
+         transport.hpp)
 
+# Skyline
 set(includes ../dependencies/skyline/include/skyline.hpp)
 
 add_executable(airflownetwork ${hdrs} ${srcs} ${includes} airflownetwork.cpp)

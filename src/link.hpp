@@ -32,6 +32,7 @@
 #include <functional>
 #include "element.hpp"
 #include "node.hpp"
+#include "filters.hpp"
 
 namespace airflownetwork {
 
@@ -67,6 +68,8 @@ template <typename I, typename P> struct Link
   const Node<I, P>& node0;
   const Node<I, P>& node1;
   const Element<P>& element;
+
+  std::vector<std::vector<Filter>> filters;
   
   double height0;
   double height1;
@@ -80,6 +83,8 @@ template <typename I, typename P> struct Link
   double flow1;
   double multiplier;
   double control;
+
+  unsigned nf;
 
   I index0;
   I index1;
