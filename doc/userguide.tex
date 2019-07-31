@@ -1,0 +1,807 @@
+\documentclass[10pt]{report}
+\usepackage{amsmath}
+%\usepackage{mathptmx}
+%\usepackage{textcmds}
+%\usepackage{graphicx,color}
+\usepackage[margin=1.25in]{geometry}
+%\usepackage[all]{xy}
+%\usepackage{nameref}
+%\usepackage[colorlinks=true,linkcolor=linkblue]{hyperref}
+%\definecolor{linkblue}{rgb}{0,0,1}
+%\usepackage{fancyvrb}
+%\usepackage{cprotect}
+%\CustomVerbatimEnvironment{commandline}{Verbatim}{xleftmargin=5mm}
+%\CustomVerbatimEnvironment{inputfile}{Verbatim}{xleftmargin=5mm}
+%\CustomVerbatimEnvironment{results}{Verbatim}{xleftmargin=5mm}
+\DeclareMathOperator{\sign}{sign}
+\DeclareMathOperator{\reynum}{Re}
+%\newenvironment{note}{\makebox[1.5cm][l]{NOTE:}\hangindent=1.5cm}{}
+%\newenvironment{note}{\makebox[1.5cm][l]{NOTE:}\everypar={\hangindent=1.5cm}}{\par}
+\newcommand{\tableref}[1]{Table~\ref{#1}}
+\newcommand{\figref}[1]{Figure~\ref{#1}}
+\newcommand{\eqnref}[1]{Equation~\ref{#1}}
+\newcommand{\algoref}[1]{Algorithm~\ref{#1}}
+\newcommand{\pluseq}{\ensuremath{\mathrel{+}=}}
+\newcommand{\minuseq}{\ensuremath{\mathrel{-}=}}
+%\newcommand{\hangingpar}[2]{\hangindent#1\hangafter#2\noindent}
+%\newcommand{\note}[1]{\makebox[1.5cm][l]{NOTE}\hangindent=1.5cm{#1}}
+%\newenvironment{hangingpars}[2]{\makebox[1.5cm][l]{NOTE:}\setlength{\parindent}{0pt}\everypar={\hangingpar{#1}{#2}}}{\par}
+%\newenvironment{note}{\begin{hangingpars}{1.5cm}{1}}{\end{hangingpars}}
+%\usepackage{parskip}
+\usepackage{siunitx}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\newcommand{\mat}[1]{\ensuremath{\mathbf{#1}}}
+%\newcommand{\IndentedState}[1][1]{\State\hspace{#1\algorithmicindent}}
+\newcommand{\IndentedState}[1]{\State\hspace{\algorithmicindent} #1}
+\newcommand{\filename}[1]{\textbf{\texttt{#1}}}
+\begin{document}
+\begin{titlepage}
+%\begin{center}
+%\begin{Huge}
+%View3D User Manual\\
+%\end{Huge}
+%\vspace{1cm}
+%\begin{Large}
+%Version 3.3, Revision 3\\
+%\end{Large}
+%\vspace{1cm}
+%\begin{Large}
+%\today
+%\end{Large}
+%\end{center}
+\title{AirflowNetwork}
+\maketitle
+\end{titlepage}
+\tableofcontents{}
+\chapter{Introduction}
+The AirflowNetwork feature was added to the EnergyPlus building simulation software
+to enable simulations of pressure and temperature based air movements. To better
+facilitate testing and development, the feature was extracted from EnergyPlus in
+2019, resulting in the software described in this document. The original feature was
+a combination of parts from COMIS and AIRNET, that was then translated to C++ when
+EnergyPlus was translated. The stand-alone version of AirflowNetwork currently
+supports some of the features of the integrated version, with more added as features
+are extracted.
+
+\chapter{Theoretical Background}
+In this chapter, the governing equations for multizone airflow analysis are developed. The fundamental assumption of well-mixed conditions applies, and the airflow in a building is described by a set of nodes connected by links along which air flows. The flow along each link depends on the conditions at the nodes at each end of the link. 
+%
+%Nomenclature goes here
+
+\section{Steady State Airflow}
+Conservation of mass for node $i$ in the network is expressed as
+\begin{equation}\label{SteadyStateGoverningEqn}
+\sum_{k} F_{im_k} = 0,
+\end{equation}
+where $F_{im_k}$ is the mass flow along linkage $k$ between node $i$ and node
+$m_k$. $n$ is the number of nodal connections to node $i$ and $F_{im_k}$ is
+the mass flow along linkage $k$. For many linkages the flow is a function of
+the pressure difference $\Delta P_{im}$, the difference in pressure between
+nodes $i$ and $m$:
+\begin{equation}
+F_{im} = f_k\left(\Delta P_{im}\right).
+\end{equation}
+$f_k$ is typically odd (in the mathematical sense) for which
+$f_k\left(-\Delta P\right) = -f_k\left(\Delta P\right)$.
+It is important to note that it is very possibility that there are multiple
+connections between $i$ and any other node, and the notation $m_k$ is used to
+express the fact that the summation is over the connections to node $i$. 
+The relationship between flow rate and pressure drop is typically nonlinear,
+so Equation~\ref{SteadyStateGoverningEqn} does not generally represent a
+system of linear equations.
+
+\subsection{System of Equations}
+When the flow between nodes is governed by the relationship
+\begin{equation}\label{LinearForm}
+F_{im} = C_k\Delta P_{im},
+\end{equation}
+then the system of equations in Equation~\ref{SteadyStateGoverningEqn} is a system of linear equations that may be solved by traditional methods of linear algebra.
+
+However, for most situations of interest, the flow between nodes is governed by nonlinear relationships. The nonlinear system of equations is amenable to solution with Newton iterations. Given an initial condition $P_i^0$, then Equation~\ref{SteadyStateGoverningEqn} is solved numerically with the iteration
+\begin{equation}
+\mat{J}(\mathbf{p}^{k+1}-\mathbf{p}^{k}) = \mathbf{b}^k,
+\end{equation}
+where $\mat{J}$ is the Jacobian matrix with elements
+\begin{equation}\label{JacobianElement}
+J_{ij} = \frac{d}{dP_j}\sum_k F_{im_k}
+       = \sum_k \frac{dF_{im_k}}{dP_j}
+\end{equation}
+$\mathbf{p}$ is the vector of nodal pressures
+\begin{equation}
+\mathbf{p} = [P_1, P_2, \dots]^T
+\end{equation}
+$\mathbf{b}$ is the residual vector
+\begin{equation}
+\mathbf{b} = \left[\sum_k F_{1m_k},
+ \sum_k F_{2m_k}, \dots\right]^T
+\end{equation}
+and the superscript denotes the iteration number. The summation form of
+\eqnref{JacobianElement} means that the Jacobian matrix can be formed in a
+finite-element-like procedure by looping over the nodal linkages rather than
+considering the nodes.
+
+To compute the elements of the Jacobian, the relationship between the pressure differences along links in the network and the individual nodal pressures will be needed. Here, this relationship is written as
+\begin{equation}
+\Delta P_{im} = P_i - P_m + \Delta P_c,
+\end{equation}
+where $\Delta P_c$ is a computed pressure difference that does not depend on 
+the nodal pressures but does depend on nodal orientation:
+\begin{equation}
+\Delta P_{mi} = P_m - P_i - \Delta P_c = -\Delta P_{im}.
+\end{equation}
+This computed term may include stack-type or wind pressure effects. 
+Then, the derivative of the pressure difference with respect to nodal pressures 
+is
+\begin{equation}
+\frac{d \Delta P_{im}}{d P_j} = \begin{cases}
+1 &\text{if $j=i$},\\
+-1 &\text{if $j=m$},\\
+0 &\text{otherwise}.
+\end{cases}
+\end{equation}
+Then, the partial derivatives in the Jacobian matrix may be evaluated as
+\begin{equation}
+\frac{d F_{im}}{d P_j} = \frac{d \Delta P_{im}}
+  {d P_j} \frac{d F_{im}}{d \Delta P_{im}}
+  = \begin{cases}
+  \frac{d F_{im}}{d \Delta P_{im}} &\text{if $m=i$},\\
+  -\frac{d F_{im}}{d \Delta P_{im}} &\text{if $m=j$},\\
+  0 &\text{otherwise}.
+  \end{cases}
+\end{equation}
+%Further simplification of calculations is available by noting that
+%$\Delta P_{ji} = -\Delta P_{ij}$, which means that
+%\begin{equation}
+%\frac{d F_{mi}}{d P_j} =-\frac{d F_{im}}{d P_j}.
+%\end{equation}
+For $i=j$ with the pressure at node $i$ unknown, elements of the Jacobian matrix
+are
+\begin{equation}
+J_{ii} = \sum_k \frac{dF_{im_k}}{dP_i}
+       = \sum_k \frac{df_k\left(\Delta P_{im_k}\right)}{dP_i}
+       = \sum_k \frac{d\Delta P_{ij}}{dP_i}
+                \frac{df_k\left(\Delta P_{im_k}\right)}{d\Delta P_{ij}}
+       = \sum_k \frac{df_k\left(\Delta P_{im_k}\right)}{d\Delta P_{im_k}}
+\end{equation}
+For $i\ne j$ with the pressures at nodes $i$ and $j$ unknown, elements of the
+Jacobian matrix are
+\begin{equation}
+J_{ij,i\ne j} = \sum_k \frac{dF_{im_k}}{dP_j}
+              = \sum_k \frac{df_k\left(\Delta P_{ij}\right)}{dP_j}
+              = \sum_k \frac{d\Delta P_{ij}}{dP_j}
+                       \frac{df_k\left(\Delta P_{ij}\right)}{d\Delta P_{ij}}
+              = -\sum_k \frac{df_k\left(\Delta P_{ij}\right)}{d\Delta P_{ij}}
+\end{equation}
+Noting that $\Delta P_{ji} = -\Delta P_{ij}$ and assuming that $f_k$ is
+odd, the Jacobian matrix is seen to be symmetric:
+\begin{equation}
+J_{ij,i\ne j} = -\sum_k \frac{df_k\left(\Delta P_{ij}\right)}{d\Delta P_{ij}}
+              = -\sum_k \frac{d\Delta P_{ji}}{d\Delta P_{ij}}
+                       (-1)\frac{df_k\left(\Delta P_{ji}\right)}{d\Delta P_{ji}}
+              = -\sum_k \frac{df_k\left(\Delta P_{ji}\right)}{d\Delta P_{ji}}
+              = J_{ji,i\ne j}
+\end{equation}
+\subsection{Jacobian Assembly}
+While it is possible to assemble the Jacobian on a node-by-node basis, the
+information that is needed to do this (the linkages connected to each node) is
+the complement of the form in which data is typically input (which lists nodes
+that are connected by a linkage). A procedure that loops through the linkages
+and fills the Jacobian matrix, similar to the finite element assembly 
+procedure, is more compatible with the data. 
+
+To simplify the discussion of the assembly process, the following assumptions
+are made:
+\begin{enumerate}
+\item Each node is assigned an identity number, with all $n$ nodes with unknown 
+pressure having lower numbers than the nodes with known pressure. 
+the number of nodes.
+\item A linkage connects nodes $i$ to $j$, and is represented by the 2-tuple
+$(i,j)$ with $i < j$.
+\item If either node associated with a linkage has know pressure, then this
+node is assigned to the second ($j$ above) location in the tuple.
+\item No linkage connects two nodes of unknown pressure.
+\end{enumerate}
+
+Linkage $(i,j)$ connecting node $i$ and $j$ contributes at most four terms
+to the Jacobian matrix: $J_{ii}$, $J_{ij}$, $J_{jj}$, and $J_{ji}$. When both
+nodes have unknown pressure, all four terms are present. When one node is 
+unknown, then only one diagonal term is present.
+
+\begin{algorithm}
+  \caption{Jacobian Assembly}\label{JacobianAssembly}
+  \begin{algorithmic}[1]
+    %\Procedure{assemble}{}
+    \State $\text{states} \gets [\text{state}_0, \text{state}_1, \ldots]$ 
+    \Comment{One state for each node}
+    \State $\text{linkages} \gets \left[ (i,j)_0, (i,j)_1, \ldots \right]$
+    \Comment{One tuple for each linkage}
+    \State $F \gets [0, 0]$
+    \State $dF \gets [0, 0]$
+    \For{$(i,j)$ \textbf{in} linkages}
+      \If{$\text{knownFlow}\left((i,j)\right)$}
+        \State $b_i \pluseq F\left((i,j)\right)$
+        \If{\textbf{not} $\text{knownPressure}\left((j)\right)$}
+          \State $b_j \minuseq F\left((i,j)\right)$
+        \EndIf
+      \Else
+        \State $nF, F, dF \gets \text{computeJacobian}\left(\text{state}_i, 
+        \text{state}_j\right)$
+        \If{$nF == 1$}\Comment{One-way flow}
+          \State $\mat{J}_{i,i} \mathrel{+}= dF$
+          \State $\mat{b}_i \pluseq F$
+          \If{\textbf{not} $\text{knownPressure}\left((j)\right)$}
+            \State $\mat{J}_{i,j} \mathrel{-}= dF$
+            \State $\mat{J}_{j,j} \mathrel{+}= dF$
+            \State $\mat{J}_{j,i} \mathrel{-}= dF$ \Comment{Skip for
+            symmetric schemes}
+            \State $\mat{b}_j \minuseq F$
+          \EndIf
+        \Else
+          \State pass
+        \EndIf
+      \EndIf
+    \EndFor
+    %\EndProcedure
+  \end{algorithmic}
+\end{algorithm}
+
+\subsection{Initialization}
+As noted above, an initial condition is required as a starting point for the
+Newton iterations. While it is possible to start off with a very simple initial
+condition (e.g. $\Delta P_{ij} = 0$ for most $i$ and $j$), Newton iterations are
+expensive and it may take additional iterations to get to a solution if an
+overly simplistic initial condition is chosen. A better alternative is to
+approximate all of the flow as linear (governed by Equation~\ref{LinearForm}),
+solve the linearized system of equations, and use the result as the initial
+condition.
+
+First, rewrite Equation~\ref{SteadyStateGoverningEqn} as
+\begin{align}
+\sum_{k}^\text{$F$ known} F_{im_k} + \sum_{k}^\text{$F$ unknown} F_{im_k}&= 0 \\
+\sum_{k}^\text{$F$ unknown} C_k\Delta P_{im_k} &= -\sum_{k}^\text{$F$ known} 
+F_{im_k}\\
+\sum_{k}^\text{$F$ unknown} C_{k} \left(P_i-P_{m_k}\right) 
+  &= -\sum_{k}^\text{$F$ known} F_{im_k}.
+\end{align}
+For meaningful result, one or more of the nodal pressures must be known
+(i.e. a boundary condition) or a linkage flow must be given. This has the 
+effect of splitting the ``$F$ unknown'' summation into two parts, one part with 
+$P$ unknown and one part with $P$ known. The equation
+may be rewritten as
+\begin{equation}
+\sum_{k=1}^\text{$F$ unknown}C_{k}P_i - \sum_{k}^\text{$P$ unknown}
+C_k P_{m_k} = \sum_{k=1}^\text{$P$ known}C_k P_{m_k}
+-\sum_{k}^\text{$F$ known} F_{im_k}.
+\end{equation}
+This is a system of linear equations that can be solved by standard linear
+solution methods. As with the Jacobian above, this system can be assembled in 
+the finite element way with a similar algorithm.
+
+\begin{algorithm}
+	\caption{Initializer Assembly}\label{InitializerAssembly}
+	\begin{algorithmic}[1]
+		%\Procedure{assemble}{}
+		%\State $\text{states} \gets [\text{state}_0, \text{state}_1, \ldots]$ 
+		%\Comment{One state for each node}
+		\State $\text{linkages} \gets \left[ (i,j)_0, (i,j)_1, \ldots \right]$
+		\Comment{One tuple for each linkage}
+		%\State $F \gets [0, 0]$
+		%\State $dF \gets [0, 0]$
+		\For{$(i,j)$ \textbf{in} linkages}
+			\If{$\text{knownFlow}\left((i,j)\right)$}
+				\State $b_i \minuseq F\left((i,j)\right)$
+				%\If{\textbf{not} $\text{knownPressure}\left( j \right)$}
+				%	\State $b_j \pluseq F\left((i,j)\right)$
+				%\EndIf
+			\ElsIf{$\text{knownPressure}\left( j \right)$}
+				\State $C \gets \text{laminarCoefficient}\left((i,j)\right)$
+				\State $M_{i,i} \pluseq C$
+				\State $b_i \pluseq C P_j$
+			\Else\Comment{Both nodes unknown}
+				\State $C \gets \text{laminarCoefficient}\left((i,j)\right)$
+				\State $M_{i,i} \pluseq C$
+				\State $M_{i,j} \minuseq C$
+				\State $M_{j,j} \pluseq C$
+				\State $M_{j,i} \minuseq C$ \Comment{Skip for symmetric     
+				schemes}
+			\EndIf
+		\EndFor
+		%\EndProcedure
+	\end{algorithmic}
+\end{algorithm}
+
+\section{Power Law Flow}\label{PowerLawSection}
+The mass-based power law relationship given by
+\begin{equation}\label{generalMassPowerLaw}
+F = \sign(\Delta P)C|\Delta P|^n
+  = \begin{cases}
+  C\Delta P^n &\text{if $\Delta P > 0$},\\
+  -C(-\Delta P)^n &\text{if $\Delta P < 0$},
+  \end{cases}
+\end{equation}
+were $F$ is the mass flow rate, $C$ is the flow coefficient, $\Delta P$
+is the pressure difference, and $n$ is the flow exponent. Note that this
+excludes $\Delta P=0$. The derivatives
+that are needed are
+\begin{equation}
+\left.\frac{\partial F}{\partial \Delta P}\right]_{\Delta P>0} 
+  = nC\Delta P^{n-1}
+  = \frac{nC\Delta P^n}{\Delta P} = \frac{nF}{\Delta P},
+\end{equation}
+and
+\begin{equation}
+\left.\frac{\partial F}{\partial \Delta P}\right]_{\Delta P<0} 
+  = -\frac{\partial(-\Delta P)}{\partial\Delta P}nC(-\Delta P)^{n-1}
+  = \frac{nC(-\Delta P)^n}{-\Delta P} = \frac{nF}{\Delta P}.
+\end{equation}
+By excluding $\Delta P=0$ from Equation~\ref{generalMassPowerLaw}, the 
+infinite derivative of these expressions is avoided. To complete the
+development for power law flow, it is necessary to ``fill in'' near zero
+pressure difference. At very small $\Delta P$, it should be expected that
+the flow will be governed by a laminar flow expression
+\begin{equation}
+F=\nu C_\text{lam}\Delta P,
+\end{equation}
+where $\nu$ is the dynamic viscosity and $C_\text{lam}$ is a laminar flow
+coefficient. The transition between laminar and turbulent flow is
+determined by the transition Reynolds number
+$\reynum_\text{trans}$, which must be specified:
+\begin{equation}
+\reynum_\text{trans} = \frac{F_\text{trans}}{D\mu},
+\end{equation}
+where $D$ is a characteristic length and $\mu$ is the kinematic viscosity.
+CONTAM computes $D$ from the flow area $A=D^2$ as
+\begin{equation}
+A = \sqrt{\frac{\rho}{2}}\frac{C}{6}.
+\end{equation}
+Then, the transitional quantities are calculated as
+\begin{equation}
+F_\text{trans}=D\mu\reynum_\text{trans}, 
+\Delta P_\text{trans} = \left(\frac{F_\text{trans}}{C}\right)^{1/n},
+\end{equation}
+and finally
+\begin{equation}
+C_\text{lam} = \frac{F_\text{trans}}{\nu\Delta P_\text{trans}}.
+\end{equation}
+The final expressions are then
+\begin{equation}\label{finalMassPowerLaw}
+F_{ij} = \begin{cases}
+  C\Delta P_{ij}^n &\text{if $\Delta P_{ij} > \Delta P_\text{trans}$},\\
+  \nu C_\text{lam}\Delta P_{ij} &\text{if $|\Delta P_{ij}| 
+    \le \Delta P_\text{trans}$},\\
+  -C(-\Delta P_{ij})^n &\text{otherwise}
+\end{cases}
+\end{equation}
+and
+\begin{equation}
+\frac{\partial F_{ij}}{\partial \Delta P_{ij}} = \begin{cases}
+  \nu C_\text{lam} &\text{if $|\Delta P_{ij}| 
+	\le \Delta P_\text{trans}$},\\
+  \frac{nF_{ij}}{\Delta P_{ij}} &\text{otherwise}.
+\end{cases}
+\end{equation}
+
+\chapter{Contaminant Transport}
+\section{Overview}
+Contaminant transport is an important application of nodal pressure modeling, and this
+chapter describes the current implementation associated with the standalone
+AirflowNetwork.
+\section{Approach}
+For simulation of transport of trace contaminants, conservation of mass for a
+transported material is written for the $i$th zone as:
+
+\begin{equation}
+\frac{dM_i}{dt} = \sum_j{\dot{M}_j} + G_i - R_i M_i,
+\end{equation}
+\noindent
+where $M$ is the mass of material in a zone, the $\dot{M}_j$'s are the fluxes of mass
+of material into and out of the zone, $G_i$ is the generation of material in the
+zone, and $R_i$ is the removal rate of material (by non-flux processes) from the
+zone. Filtration processes are embedded in the $\dot{M}_j$'s and the equation is
+typically writte in terms of zonal concentrations $C_i = M_i/(\rho_i V_i)$ (with $\rho_i$
+and $V_i$ denoting the zonal density and volume, respectively) rather than mass. The
+resulting equation is
+
+\begin{equation}
+\frac{dM_i}{dt} = \sum_j{F_j (1-\eta_j) C_{\text{up}(j)}} + G_i - R_i C_i = H_i,
+\end{equation}
+\noindent
+where $\eta_j$ is the filtration efficiency along path $j$, the $F_j$s are the mass
+flow of air along path $j$, and  $C_{\text{up}(j)}$ is the concentration at the upstream end
+of the flow along the path. The right hand side terms are lumped together as
+$H_i$ for purposes of the explanations below. For trace contaminants, this
+equation is coupled to the airflow calculation in one direction: the airflow
+calculation determines the $F_j$s, but the transport of material has no impact
+upon the airflows. It is useful to write this equation in matrix term, which results in
+
+\begin{equation}
+\frac{d\vec{M}}{dt} = \left(\mat{T} - \mat{R}\right)\vec{C} + \vec{G} = \vec{H},
+\end{equation}
+\noindent
+where $\mat{T}$ is the transport matrix containing flow information and $\mat{R}$
+is a diagonal matrix containing the removal terms. In terms of concentration only, the
+ equation is
+
+\begin{equation}
+\frac{d}{dt}\left(\mat{A}\vec{C}\right) = \left(\mat{T} - \mat{R}\right)\vec{C} + \vec{G},
+\end{equation}
+\noindent
+where $\mat{A}$ is the diagonal matrix containing the product $\rho V$ for each zone. 
+
+\subsection{Assembly of Transport Matrix}
+
+\begin{algorithm}
+  \caption{Transport Matrix Assembly}\label{TransportAssembly}
+  \begin{algorithmic}[1]
+    \State \textbf{struct} LinkFlow $\{$
+        \IndentedState \textbf{real} $\eta$
+        \Comment{Filter efficiency}
+        \IndentedState \textbf{index} $i$
+        \Comment{Index of first node in matrix}
+        \IndentedState \textbf{index} $j$
+        \Comment{Index of second node in matrix}
+        \IndentedState \textbf{bool} two\_way
+        \Comment{True for two-way flow}
+        \IndentedState \textbf{real} flow
+        \Comment{Positive or negative, flow magnitude for one-way flow}
+        \IndentedState \textbf{real} flow0
+        \Comment{Positive, flow from node $i$ to $j$}
+        \IndentedState \textbf{real} flow1
+        \Comment{Positive, flow from node $j$ to $i$}
+        
+    \State  $\}\ \text{links} \gets [(\eta, i, j, \text{two\_way}, \text{flow}, \text{flow0}, \text{flow1})_0, (\eta, i, j, \text{two\_way}, \text{flow}, \text{flow0}, \text{flow1})_1, \ldots]$
+    \State $T \gets [0]$
+    \Comment{$T$ is a sparse matrix}
+    \For{link \textbf{in} links}
+      %\If{link.$\eta == 1$}
+      %  \textbf{continue}
+      %\EndIf
+      \If{\textbf{not} link.two\_way}
+        \If{$\text{link.flow} > 0$}
+            \State $T(\text{link}.i, \text{link}.i) \minuseq \text{link.flow}$
+            \State $T(\text{link}.j, \text{link}.i) \pluseq \left(1-\eta\right) \text{link.flow}$
+        \Else
+            \State $T(\text{link}.j, \text{link}.j) \minuseq \text{link.flow}$
+            \State $T(\text{link}.i, \text{link}.j) \pluseq \left(1-\eta\right) \text{link.flow}$
+        \EndIf
+      \Else
+          \State pass
+      \EndIf
+    \EndFor
+    %\EndProcedure
+  \end{algorithmic}
+\end{algorithm}
+ 
+\subsection{Time Advancement}
+To advance the conservation equations through time, there are a number of
+different options. For now, the first order finite difference discretization in
+time will be used in a number of different ways. First, an explicit Euler method
+is implemented as
+
+\begin{equation}
+\vec{M}_{t+h} = \vec{M}_t + h\vec{H}_t,
+\end{equation}
+\noindent
+where $t$ is time and $h$ is the timestep. This method is explicit in that the right hand side
+is evaluated at time $t$ only and is easily computed:
+
+\begin{equation}
+\vec{C}_{t+h} = \mat{A}_{t+h}^{-1}\left( \mat{A}_{t}\vec{C}_t + h\vec{H}_t\right).
+\end{equation}
+\noindent
+Note that since $\mat{A}$ is a diagonal matrix, the computation of the inverse is not
+especially difficult. However, the ease of computation of the explicit approach is more
+than offset by the potential for instability that comes with the explicit method.
+
+The implicit Euler method is implemented as:
+
+\begin{equation}
+\vec{M}_{t+h} = \vec{M}_t + h\vec{H}_{t+h}.
+\end{equation}
+\noindent
+This method is implicit in that the right hand side is evaluated at time $t+h$, which
+requires a solution of simultaneous equations. Fortunately, the methods that are used
+to solve the airflow problem (e.g. the skyline approach) may also be used here. In terms
+of concentration:
+
+\begin{equation}
+\left(\mat{A}_{t+h} -h\mat{T} +h\mat{R}\right)\vec{C}_{t+h}
+ = \mat{A}_{t}\vec{C}_t + h\vec{G}_{t+h}.
+\end{equation}
+
+The Crank-Nicolson method is an alternative semi-implicit approach uses information
+from both $t$ and $t+h$:
+
+\begin{equation}
+\left(\mat{A}_{t+h} - 0.5h\mat{T} + 0.5h\mat{R}\right)\vec{C}_{t+h}
+ = \mat{A}_{t}\vec{C}_t + 0.5h\vec{G}_{t+h} + 0.5h\vec{H}_t.
+\end{equation}
+\noindent
+In terms of concentration:
+
+\begin{equation}
+\vec{M}_{t+h} = \vec{M}_t + 0.5h(\vec{H}_{t+h} + \vec{H}_t).
+\end{equation}
+\noindent
+This method also requires solution of simultaneous equations.
+
+\section{Eigen-Based Implementation}
+Several implementations are provided, including one using the Eigen C++ computer linear
+algebra library. The functions are provided in \filename{eigen\_transport.hpp} and are:
+\begin{itemize}
+\item \texttt{transport\_matrix} -- Fill in the transport matrix $T$
+\item \texttt{explicit\_euler\_transport} -- Compute transport using explicit Euler stepping
+\item \texttt{implicit\_euler\_transport} -- Compute transport using implicit Euler stepping
+\item \texttt{crank\_nicolson\_transport} -- Compute transport using Crank-Nicolson stepping
+\end{itemize}
+These functions are described further below. The functions are implemented as templates
+using the following types:
+\begin{itemize}
+\item \texttt{M} -- a matrix type (e.g. \texttt{Eigen::SparseMatrix\textless{}double\textgreater})
+\item \texttt{V} -- a vector type (e.g. \texttt{Eigen::VectorXd})
+\item \texttt{S} -- a solver type. (e.g. \texttt{Eigen::BiCGSTAB\textless{}Eigen::SparseMatrix\textless{}double\textgreater\textgreater})
+\item \texttt{L} -- an array-type object containing link information, must have support for ranged \texttt{for};
+\end{itemize}
+
+\subsection{\texttt{ void transport\_matrix(size\_t key, M\& matrix, L\& links)}}
+Fill in the transport matrix \texttt{M}. The arguments are:
+\begin{itemize}
+\item \texttt{size\_t key} -- key for the material under consideration
+\item \texttt{M\& matrix} -- a matrix object with a \texttt{coeffRef} method
+\item \texttt{L\& links} -- an array type object of link information, with a link object that
+\begin{itemize}
+\item has an element \texttt{filters} such that \texttt{filters[key]} returns all filters associated with the key
+\item has an  element \texttt{nf} that is the number of flows through the link
+\item has elements \texttt{flow}, \texttt{flow0}, \texttt{flow1} that describe the flow through the link as given above in \algoref{TransportAssembly}
+\item has elements \texttt{node0} and \texttt{node1} that contain \texttt{index} information
+\end{itemize}
+\end{itemize}
+The resulting transport matrix is stored in \texttt{matrix}, so the matrix object should be
+zeroed out before the call of this function.
+\subsection{\texttt{void explicit\_euler\_transport(double h, M\& matrix, V\& G, V\& R, V\& A, V\& C)}}
+Compute transport using explicit Euler stepping. The arguments are
+\begin{itemize}
+\item \texttt{double h} -- the timestep size
+\item \texttt{M\& matrix} -- a matrix object that can be multiplied by a scalar (e.g. \texttt{h*matrix}) and a vector  (e.g. \texttt{matrix*v})
+\item \texttt{V\& G} -- a vector object of generation rates; the vector object must allow scalar multiplication and have a component-wise product function named \texttt{cwiseProduct}
+\item \texttt{V\& R} -- a vector object of removal rates
+\item \texttt{V\& A} -- a vector object of nodal dry air masses
+\item \texttt{V\& C} -- a vector object of material concentrations; this vector is over-written with new values
+\end{itemize}
+\subsection{\texttt{void implicit\_euler\_transport(S\& solver, double h, M\& matrix, V\& G, V\& R, V\& A0, V\&A, V\& C0, V\&C)}}
+\begin{itemize}
+\item \texttt{S\& solver} -- a solver object that operates as an Eigen iterative solver; must have \texttt{compute} and \texttt{solve} member functions
+\item \texttt{double h} -- the timestep size
+\item \texttt{M\& matrix} -- a matrix object that can be multiplied by a scalar (e.g. \texttt{h*matrix}), is compatible with the \texttt{asDiagonal} function of the vector object, and is compatible with the solver object
+\item \texttt{V\& G} -- a vector object of generation rates; the vector object must allow scalar multiplication, addition/subtraction with other vectors, and have a member function named \texttt{asDiagonal} that promotes the vector to a diagonal matrix
+\item \texttt{V\& R} -- a vector object of removal rates
+\item \texttt{V\& A0} -- a vector object of nodal dry air masses from time $t$
+\item \texttt{V\& A} -- a vector object of nodal dry air masses from time $t+h$
+\item \texttt{V\& C0} -- a vector object of material concentrations from time $t$
+\item \texttt{V\& C} -- output a vector object of material concentrations for time $t+h$; this vector is over-written with new values
+\end{itemize}
+\subsection{\texttt{void crank\_nicolson\_transport(S\& solver, double h, M\& matrix, V\& G, V\& R, V\& A0, V\&A, V\& C0, V\&C)}}
+The arguments and operation of this function are the same as those for
+\texttt{implicit\_euler\_transport}.
+
+%\chapter{Wind}
+%Ambient conditions play a large role in transport phenomena inside a building.
+%Wind pressure on the envelope of the building is a driving force in airflows
+%within the building. The 2009 ASHRAE Handbook of Fundamentals \cite{HoF2009}
+%relates wind velocity $V_H$ and wind pressure $p_w$ is
+%\begin{equation}
+%p_w = \frac{\rho V_H^2}{2} C_p,
+%\end{equation}
+%where $V_H$ is the approach wind speed at upwind wall height $H$ and $C_p$ is the
+%wind pressure coefficient. $H$ is often taken to be the height of the building. For
+%most situations, the wind speed measured at the building is not available and a 
+%meteorological wind speed $V_\text{MET}$ is taken from a location nearby (e.g. a
+%local airport) measured at height $H_\text{MET}$ (typically taken to be 10 m). Various
+%relationships have been used to connect these two wind speeds, which can be summarized
+%in terms of a correction coefficient $C_H$:
+%\begin{equation}
+%p_w = \frac{\rho V_\text{MET}^2}{2} C_HC_p,
+%\end{equation}
+%where
+%\begin{equation}
+%C_H = \frac{V_H^2}{V_\text{MET}^2}.
+%\end{equation}
+%The 1993 ASHRAE Handbook of Fundamentals \cite{HoF1993} uses:
+%\begin{equation}\label{HoF1993Correction}
+%C_H = A_0^2\left(\frac{H}{H_\text{MET}}\right)^{2a}\!\!\!\!\!\!\!\!,
+%\end{equation}
+%with constants $A_0$ and $a$ from \tableref{HoF1993Constants}. An alternative 
+%set of constants, used in the PCW software \cite{PCW}, is given in 
+%\tableref{PCWConstants}.
+%\begin{table}
+%  \begin{center}
+%    \caption{Correction constants for Equation \ref{HoF1993Correction}}
+%    \label{HoF1993Constants}
+%    \begin{tabular}{lcc}
+%      Terrain Type & $A_0$ & $a$ \\ \hline
+%      Urban & 0.35 & 0.40 \\
+%      Suburban & 0.60 & 0.28 \\
+%      Airport & 1.00 & 0.15
+%    \end{tabular}
+%  \end{center}
+%\end{table}
+%\begin{table}
+%  \begin{center}
+%    \caption{Correction constants for Equation \ref{HoF1993Correction}}
+%    \label{PCWConstants}
+%    \begin{tabular}{lcc}
+%      Terrain Description & $A_0$ & $a$ \\ \hline
+%      Large obstructions within 15 ft (4.5 m) & 0.47 & 0.35 \\
+%      Large obstructions within 15-40 ft (4.5-12 m) & 0.67 & 0.25 \\
+%      Large obstructions within 40-100 ft (12-30 m) & 0.85 & 0.20 \\
+%      Flat terrain with few obstructions & 1.00 & 0.15 \\
+%      Absolutely no obstructions, ocean, etc. & 1.30 & 0.10
+%    \end{tabular}
+%  \end{center}
+%\end{table}
+%
+%Alternatively, the 2009 ASHRAE Handbook of Fundamentals uses
+%\begin{equation}\label{HoF2009Correction}
+%C_H = \left[\left(\frac{\delta_\text{MET}}{H_\text{MET}}\right)^{a_\text{MET}}
+%\left(\frac{H}{\delta}\right)^a
+%\right],
+%\end{equation}
+%where the $\delta$s are atmospheric boundary layer thicknesses and the $a$s
+%are model exponents. Recommended values are given in \tableref{HoF2009Constants}. The
+%meteorological station is usually taken to be terrain category 3 ($a_\text{MET}=0.14$
+%and $\delta_\text{MET}=270\text{ m}$).
+%\begin{table}
+%  \begin{center}
+%    \caption{Parameters for Equation \ref{HoF2009Correction} \cite{HoF2009}}
+%    \label{HoF2009Constants}
+%    \begin{tabular}{cp{5cm}cc}
+%      Terrain && Exponent & Layer \\ 
+%      Category & Description & $a$ & Thickness $\delta$ \\ \hline
+%      1 & Large city centers, in which at least 50\% of buildings are higher than
+%          25~m (70~ft), over a distance of at least 0.8~km (0.5~mi) or 10 times the
+%          height of the structure upwind, whichever is 
+%          greater & 0.33 & 460 m (1500 ft) \\
+%      2 & Urban and suburban areas, wooded areas, or other terrain with numerous closely
+%          spaced obstructions having the size of single-family dwellings or larger, over
+%          a distance of at least 460~m (0.5 mi) or 10 times the height of the structure
+%          upwind, whichever is greater & 0.22 & 370 m (1200 ft) \\
+%      3 & Open terrain with scattered obstructions having heights generally less than
+%          9~m (30~ft), including flat open country typical of meteorological station 
+%          surroundings & 0.14 & 270 m (900 ft) \\
+%      4 & Flat, unobstructed areas exposed to wind flowing over water for at least
+%          1.6~km (1~mi) over a distance of at least 460 m (1500 ft) or 10 times the
+%          height of the structure inland, whichever is greater& 0.1 & 210 m (700 ft)
+%    \end{tabular}
+%  \end{center}
+%\end{table}
+%\chapter{Example Calculations}
+%Several example calculations are presented here to demonstrate the calculation
+%procedure and provide results for comparison.
+%\section{Forced Flow Through an Opening}
+%\subsection{Description}
+%Air at standard temperature and pressure is forced through an opening that has
+%flow coefficient 0.1 and flow exponent 0.5. The flow rate is 0.1 \si{kg/s}.
+%Assuming that the conditions are the same on the other side of the crack, this
+%can be represented by a three-node system as shown in \figref{forcedopening}.
+%\subsection{Solution}
+%In this situation, \eqnref{SteadyStateGoverningEqn} is written only for node
+%2 and reduces to
+%\begin{equation}
+%F_{21} + F_{23}=0.
+%\end{equation}
+%$F_{21}$, however, is known, so it should be moved to the right-hand side.
+%Adding in the power law representation, the resulting equation for the pressure
+%difference between node 2 and 3 is:
+%\begin{equation}
+%\Delta P_{23} = \left(\frac{-F_{21}}{C}\right)^2 = 1\ \si{Pa}
+%\end{equation}
+%
+%\section{Numerical Solution}
+%A numerical solution is relatively straightforward to compute. The Jacobian that
+%is required is
+%\begin{equation}
+%J_{22} = \frac{dF_{23}}{dP_2} = \frac{d}{dP_{2}}C\Delta P_{23}^{0.5}
+%       = \frac{C}{\Delta P_{23}^{0.5}}\frac{d\Delta P_{23}}{dP_2}
+%       = \frac{C}{\Delta P_{23}^{0.5}} = \frac{F_{23}}{\Delta P_{23}}.
+%\end{equation}
+%Note that starting the calculation with $P_2=P_3$ leads to an immediate issue.
+%For a transition Reynolds number of 30, density 1.20415 \si{kg/m^3}, and
+%viscosity \SI[per-mode=symbol]{1.81625e-5}{\kilo\gram\per\meter\per\second},
+%the CONTAM procedure described in \ref{PowerLawSection} results in
+%$C_0=\mu 1.06997\times 10^7 = 194.333$. The initialization in
+%\eqnref{}
+%
+%\section{Example Calculations}
+%\subsection{Linear Flow With Specified Pressure Drop}
+%Consider the situation shown in \figref{FourNodeFigure}, with is a four-node 
+%configuration. 
+%
+%\begin{table}
+%	\begin{center}
+%		\caption{Example 1 Node Characteristics}
+%		\label{ExampleOneNodeTable}
+%		\begin{tabular}{ccc}
+%			Node & Number & Known? \\ \hline
+%			A & 3 & Known \\
+%			B & 0 & Unknown \\
+%			C & 1 & Unknown \\
+%			D & 2 & Known \\
+%		\end{tabular}
+%	\end{center}
+%\end{table}
+%
+%\begin{table}
+%	\begin{center}
+%		\caption{Example 1 Linkage Characteristics}
+%		\label{ExampleOneLinkTable}
+%		\begin{tabular}{ccc}
+%			Link & $C_0$ & $C$ \\ \hline
+%			$(0,3)$ & 1 & 1 \\
+%			$(0,1)$ & 2 & 2 \\
+%			$(1,2)$ & 2 & 2 \\
+%		\end{tabular}
+%	\end{center}
+%\end{table}
+%The initialization problem can be solved directly by analogy to electric 
+%circuits. Treating these 
+%
+%\begin{enumerate}
+%\item Link $(0,3)$: Add 1 to $M_{0,0}$, $1\times 101,325$ to $b_0$.
+%\item Link $(0,1)$: Add 2 to $M_{0,0}$ and $M_{1,1}$, $-2$ to $M_{0,1}$ and 
+%$M_{1,0}$
+%\item Link $(1,2)$: Add 2 to $M_{1,1}$, $2\times 101,425$ to $b_1$.
+%\end{enumerate}
+%
+%\begin{equation}
+%\begin{bmatrix}
+%1+2 & -2 \\
+%-2  & 2+2 \\
+%\end{bmatrix}
+%\begin{bmatrix}
+%P_0 \\
+%P_1 \\
+%\end{bmatrix}
+%=
+%\begin{bmatrix}
+%101325 \\
+%202850 \\
+%\end{bmatrix}
+%\end{equation}
+%Solving via elimination yields
+%\begin{equation}
+%\begin{bmatrix}
+%P_0 \\
+%P_1 \\
+%\end{bmatrix}
+%=
+%\begin{bmatrix}
+%101375 \\
+%101400 \\
+%\end{bmatrix}.
+%\end{equation}
+%The flow through the system can then be calculated using any one of the links.
+%
+%\begin{table}
+%	\begin{center}
+%		\caption{Example 1 Iterations}
+%		\label{ExampleOneInterationTable}
+%		\begin{tabular}{c|cc}
+%			Iteration & 0 & 1 \\ \hline
+%			$F_{0,3}$ & - & 12.71541393916609 \\
+%			$F_{0,1}$ & - & -16.20656596692762 \\
+%			$F_{1,2}$ & - & -16.20656596692762 \\
+%			$\delta P_0$ & - & 1 \\
+%			$\delta P_1$ & - & 2 \\
+%			$P_0$ & 101375 & 1 \\
+%			$P_1$ & 101400 & 2 \\
+%			$P_2$ & 101425 & 2 \\
+%			$P_3$ & 101325 & 2 \\
+%			$\Delta P_{0,3}$ & 50 & 1 \\
+%			$\Delta P_{0,1}$ & -25 & 2 \\
+%			$\Delta P_{1,2}$ & -25 & 2 \\
+%		\end{tabular}
+%	\end{center}
+%\end{table}
+
+\end{document}
