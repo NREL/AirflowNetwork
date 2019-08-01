@@ -73,19 +73,21 @@ template <typename L, typename M, typename K> void transport_matrix(const K& key
   }
 }
 
-template <typename M, typename V> void explicit_euler_transport(double dt, M& matrix, V& G, V& R, V& A, V& C)
+template <typename M, typename V> void explicit_euler_transport(double h, M& matrix, V& G, V& R, V& A0, V& A, V& C)
 {
-  C = dt * matrix * C + dt * G + C - dt * R.cwiseProduct(C);
+  C = (A0.cwiseProduct(C) + h *(matrix*C - R.cwiseProduct(C) + G)).cwiseQuotient(A);
 }
 
-template <typename S, typename M, typename V> void implicit_euler_transport(S &solver, double dt, M& matrix, V& G, V& R, V& A0, V& A, V& C0, V&C)
+template <typename S, typename M, typename V> void implicit_euler_transport(S &solver, double h, M& matrix, V& G, V& R, V& A0, V& A, V& C)
 {
   // Set up
-  matrix *= -dt;
-  matrix += (A - dt*R).asDiagonal();
+  matrix *= -h;
+  matrix += (A + h*R).asDiagonal();
   solver.compute(matrix);
   // Solve
-  C = solver.solve(C0 + dt*G);
+  G *= h;
+  G += C;
+  C = solver.solve(G);
 }
 
 }
