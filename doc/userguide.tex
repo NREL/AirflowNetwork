@@ -529,18 +529,18 @@ This method also requires solution of simultaneous equations.
 Several implementations are provided, including one using the Eigen C++ computer linear
 algebra library. The functions are provided in \filename{eigen\_transport.hpp} and are:
 \begin{itemize}
-\item \texttt{transport\_matrix} -- Fill in the transport matrix $T$
-\item \texttt{explicit\_euler\_transport} -- Compute transport using explicit Euler stepping
-\item \texttt{implicit\_euler\_transport} -- Compute transport using implicit Euler stepping
-\item \texttt{crank\_nicolson\_transport} -- Compute transport using Crank-Nicolson stepping
+\item \texttt{matrix} -- Fill in the transport matrix $T$
+\item \texttt{explicit\_euler} -- Compute transport using explicit Euler stepping
+\item \texttt{implicit\_euler} -- Compute transport using implicit Euler stepping
+\item \texttt{crank\_nicolson} -- Compute transport using Crank-Nicolson stepping
 \end{itemize}
 These functions are described further below. The functions are implemented as templates, so are not strictly
 limited to Eigen types. The types are:
 \begin{itemize}
 \item \texttt{M} -- a matrix type (e.g. \texttt{Eigen::SparseMatrix\textless{}double\textgreater}) that
 \begin{itemize}
-\item can be multiplied by a scalar (e.g. \texttt{h*matrix})
-\item can be multiplied by a vector  (e.g. \texttt{matrix*v})
+\item can be multiplied by a scalar (e.g. \texttt{the\_scalar*the\_matrix})
+\item can be multiplied by a vector  (e.g. \texttt{the\_matrix*the\_vector})
 \item is compatible with the \texttt{asDiagonal} function of the vector object \texttt{V}
 \item is compatible with the solver object \texttt{S}
 \end{itemize}
@@ -556,11 +556,11 @@ limited to Eigen types. The types are:
 \item \texttt{L} -- an array-type object containing link information, must have support for ranged \texttt{for};
 \end{itemize}
 
-\subsection{\texttt{ void transport\_matrix(size\_t key, M\& matrix, L\& links)}}
+\subsection{\texttt{void matrix(size\_t key, M\& T, L\& links)}}
 Fill in the transport matrix \texttt{M}. The arguments are:
 \begin{itemize}
 \item \texttt{size\_t key} -- key for the material under consideration
-\item \texttt{M\& matrix} -- a matrix object with a \texttt{coeffRef} method
+\item \texttt{M\& T} -- a matrix object with a \texttt{coeffRef} method
 \item \texttt{L\& links} -- an array type object of link information, with a link object that
 \begin{itemize}
 \item has an element \texttt{filters} such that \texttt{filters[key]} returns all filters associated with the key
@@ -569,43 +569,41 @@ Fill in the transport matrix \texttt{M}. The arguments are:
 \item has elements \texttt{node0} and \texttt{node1} that contain \texttt{index} information
 \end{itemize}
 \end{itemize}
-The resulting transport matrix is stored in \texttt{matrix}, so the matrix object should be
+The resulting transport matrix is stored in \texttt{T}, so the matrix object should be
 zeroed out before the call of this function.
-\subsection{\texttt{void explicit\_euler\_transport(double h, M\& matrix, V\& G, V\& R, V\& A, V\& A, V\& C)}}
+\subsection{\texttt{void explicit\_euler(double h, M\& T, V\& G0, V\& R0, V\& A0, V\& A, V\& C)}}
 Compute transport using explicit Euler stepping. The arguments are
 \begin{itemize}
 \item \texttt{double h} -- the timestep size
-\item \texttt{M\& matrix} -- the transport matrix
-\item \texttt{V\& G} -- a vector object of generation rates for time $t$
-\item \texttt{V\& R} -- a vector object of removal rates for time $t$
+\item \texttt{M\& T} -- the transport matrix
+\item \texttt{V\& G0} -- a vector object of generation rates for time $t$
+\item \texttt{V\& R0} -- a vector object of removal rates for time $t$
 \item \texttt{V\& A0} -- a vector object of nodal dry air masses for time $t$
 \item \texttt{V\& A} -- a vector object of nodal dry air masses for time $t+h$
 \item \texttt{V\& C} -- a vector object of material concentrations, initially with values for time $t$; this vector is over-written with new values for time $t+h$
 \end{itemize}
-\subsection{\texttt{void implicit\_euler\_transport(S\& solver, double h, M\& matrix, V\& G, V\& R, V\& A0, V\&A, V\&C)}}
+\subsection{\texttt{void implicit\_euler(S\& solver, double h, M\& T, V\& G, V\& R, V\& A0, V\&A, V\&C)}}
 \begin{itemize}
 \item \texttt{S\& solver} -- a solver object
 \item \texttt{double h} -- the timestep size
-\item \texttt{M\& matrix} -- the transport matrix
-\item \texttt{V\& G} -- a vector object of generation rates; the vector object must allow scalar multiplication, addition/subtraction with other vectors, and have a member function named \texttt{asDiagonal} that promotes the vector to a diagonal matrix
-\item \texttt{V\& R} -- a vector object of removal rates
+\item \texttt{M\& T} -- the transport matrix
+\item \texttt{V\& G} -- a vector object of generation rates for time $t+h$
+\item \texttt{V\& R} -- a vector object of removal rates for time $t+h$
 \item \texttt{V\& A0} -- a vector object of nodal dry air masses for time $t$
 \item \texttt{V\& A} -- a vector object of nodal dry air masses for time $t+h$
-\item \texttt{V\& C0} -- a vector object of material concentrations for time $t$
 \item \texttt{V\& C} -- output a vector object of material concentrations for time $t$; this vector is over-written with new values
 \end{itemize}
-\subsection{\texttt{void crank\_nicolson\_transport(S\& solver, double h, M\& matrix, V\& G, V\& R, V\& A0, V\&A, V\& C0, V\&C)}}
+\subsection{\texttt{void crank\_nicolson(S\& solver, double h, M\& T, V\& G, V\& R, V\& A0, V\&A, V\& C0, V\&C)}}
 \begin{itemize}
 \item \texttt{S\& solver} -- a solver object that operates as an Eigen iterative solver; must have \texttt{compute} and \texttt{solve} member functions
 \item \texttt{double h} -- the timestep size
-\item \texttt{M\& matrix} -- a matrix object that can be multiplied by a scalar (e.g. \texttt{h*matrix}), is compatible with the \texttt{asDiagonal} function of the vector object, and is compatible with the solver object
+\item \texttt{M\& T} -- a matrix object that can be multiplied by a scalar (e.g. \texttt{h*matrix}), is compatible with the \texttt{asDiagonal} function of the vector object, and is compatible with the solver object
 \item \texttt{V\& G0} -- a vector object of generation rates for time $t$
 \item \texttt{V\& G} -- a vector object of generation rates for time $t+h$
 \item \texttt{V\& R0} -- a vector object of removal rates for time $t$
 \item \texttt{V\& R} -- a vector object of removal rates for time $t+h$
 \item \texttt{V\& A0} -- a vector object of nodal dry air masses for time $t$
 \item \texttt{V\& A} -- a vector object of nodal dry air masses for time $t+h$
-\item \texttt{V\& C0} -- a vector object of material concentrations for time $t$
 \item \texttt{V\& C} -- output a vector object of material concentrations for time $t+h$; this vector is over-written with new values
 \end{itemize}
 

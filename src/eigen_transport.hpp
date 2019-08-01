@@ -35,8 +35,9 @@
 #include "filters.hpp"
 
 namespace airflownetwork {
+namespace transport {
 
-template <typename L, typename M, typename K> void transport_matrix(const K& key, M& matrix, L& links)
+template <typename L, typename M, typename K> void matrix(const K& key, M& matrix, L& links)
 {
   for (auto& link : links) {
     // Compute the inefficiency
@@ -73,12 +74,12 @@ template <typename L, typename M, typename K> void transport_matrix(const K& key
   }
 }
 
-template <typename M, typename V> void explicit_euler_transport(double h, M& matrix, V& G, V& R, V& A0, V& A, V& C)
+template <typename M, typename V> void explicit_euler(double h, M& matrix, V& G0, V& R0, V& A0, V& A, V& C)
 {
-  C = (A0.cwiseProduct(C) + h *(matrix*C - R.cwiseProduct(C) + G)).cwiseQuotient(A);
+  C = (A0.cwiseProduct(C) + h *(matrix*C - R0.cwiseProduct(C) + G0)).cwiseQuotient(A);
 }
 
-template <typename S, typename M, typename V> void implicit_euler_transport(S &solver, double h, M& matrix, V& G, V& R, V& A0, V& A, V& C)
+template <typename S, typename M, typename V> void implicit_euler(S &solver, double h, M& matrix, V& G, V& R, V& A0, V& A, V& C)
 {
   // Set up
   matrix *= -h;
@@ -86,8 +87,24 @@ template <typename S, typename M, typename V> void implicit_euler_transport(S &s
   solver.compute(matrix);
   // Solve
   G *= h;
-  G += C;
+  G += A*C;
   C = solver.solve(G);
+}
+
+template <typename S, typename M, typename V> void crank_nicolson(S& solver, double h, M& matrix, V& G0, V& G, V& R0, V& R, V& A0, V& A, V& C)
+{
+  h *= 0.5;
+  auto hH = h * (matrix * C - R0.cwiseProduct(C) + G0);
+  // Set up
+  matrix *= -h;
+  matrix += (A + h * R).asDiagonal();
+  solver.compute(matrix);
+  // Solve
+  G *= h;
+  G += A*C + hH;
+  C = solver.solve(G);
+}
+
 }
 
 }

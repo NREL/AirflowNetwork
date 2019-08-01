@@ -57,7 +57,7 @@ TEST_CASE("Test a very simple network, explicit, Eigen", "[eigen_transport]")
   matrix.insert(0, 0) = matrix.insert(1, 0) = 0.0;
 
   // Fill in the matrix
-  airflownetwork::transport_matrix<std::vector<airflownetwork::Link<size_t, airflownetwork::properties::Fixed>>, 
+  airflownetwork::transport::matrix<std::vector<airflownetwork::Link<size_t, airflownetwork::properties::Fixed>>, 
     Eigen::SparseMatrix<double>, size_t>(0, matrix, links);
 
   CHECK(matrix.nonZeros() == 2);
@@ -79,7 +79,7 @@ TEST_CASE("Test a very simple network, explicit, Eigen", "[eigen_transport]")
   Eigen::VectorXd a(2);
   a << 1.0, 1.0;
 
-  airflownetwork::explicit_euler_transport<Eigen::SparseMatrix<double>, Eigen::VectorXd>(0.25, matrix, g, r, a0, a, c);
+  airflownetwork::transport::explicit_euler<Eigen::SparseMatrix<double>, Eigen::VectorXd>(0.25, matrix, g, r, a0, a, c);
   CHECK(c(0) == 0.5 - 0.25 * 0.5);
   CHECK(c(1) == 0.5 + 0.25 * 0.5 * 0.5);
   // Check for mass conservation
@@ -110,7 +110,7 @@ TEST_CASE("Test a very simple network, opposite direction, explicit, eigen", "[e
   matrix.insert(0, 1) = matrix.insert(1, 1) = 0.0;
 
   // Fill in the matrix
-  airflownetwork::transport_matrix<std::vector<airflownetwork::Link<size_t, airflownetwork::properties::Fixed>>,
+  airflownetwork::transport::matrix<std::vector<airflownetwork::Link<size_t, airflownetwork::properties::Fixed>>,
     Eigen::SparseMatrix<double>, size_t>(0, matrix, links);
 
   CHECK(matrix.nonZeros() == 2);
@@ -131,7 +131,7 @@ TEST_CASE("Test a very simple network, opposite direction, explicit, eigen", "[e
   Eigen::VectorXd a(2);
   a << 1.0, 1.0;
 
-  airflownetwork::explicit_euler_transport<Eigen::SparseMatrix<double>, Eigen::VectorXd>(0.25, matrix, g, r, a0, a, c);
+  airflownetwork::transport::explicit_euler<Eigen::SparseMatrix<double>, Eigen::VectorXd>(0.25, matrix, g, r, a0, a, c);
   CHECK(c(1) == 0.5 - 0.25 * 0.5);
   CHECK(c(0) == 0.5 + 0.25 * 0.5 * 0.5);
   // Check for mass conservation
@@ -172,7 +172,7 @@ TEST_CASE("Test a very simple network with zero, explicit, Eigen", "[eigen_trans
   a << 1.0, 1.0;
 
   // Fill in the matrix
-  airflownetwork::transport_matrix<std::vector<airflownetwork::Link<size_t, airflownetwork::properties::Fixed>>,
+  airflownetwork::transport::matrix<std::vector<airflownetwork::Link<size_t, airflownetwork::properties::Fixed>>,
     Eigen::SparseMatrix<double>, size_t>(0, matrix, links);
 
   CHECK(matrix.nonZeros() == 2);
@@ -185,7 +185,7 @@ TEST_CASE("Test a very simple network with zero, explicit, Eigen", "[eigen_trans
   Eigen::VectorXd r(2);
   r << 0.0, 0.0;
 
-  airflownetwork::explicit_euler_transport<Eigen::SparseMatrix<double>, Eigen::VectorXd>(0.25, matrix, g, r, a0, a, c);
+  airflownetwork::transport::explicit_euler<Eigen::SparseMatrix<double>, Eigen::VectorXd>(0.25, matrix, g, r, a0, a, c);
   CHECK(c(0) == c0(0));
   CHECK(c(1) == c0(1));
 }
@@ -214,7 +214,7 @@ TEST_CASE("Test a very simple network, implicit, Eigen", "[eigen_transport]")
   matrix.insert(0, 0) = matrix.insert(1, 0) = 0.0;
 
   // Fill in the matrix
-  airflownetwork::transport_matrix<std::vector<airflownetwork::Link<size_t, airflownetwork::properties::Fixed>>,
+  airflownetwork::transport::matrix<std::vector<airflownetwork::Link<size_t, airflownetwork::properties::Fixed>>,
     Eigen::SparseMatrix<double>, size_t>(0, matrix, links);
 
   CHECK(matrix.nonZeros() == 2);
@@ -239,7 +239,7 @@ TEST_CASE("Test a very simple network, implicit, Eigen", "[eigen_transport]")
 
   Eigen::BiCGSTAB<Eigen::SparseMatrix<double>> solver;
 
-  airflownetwork::implicit_euler_transport(solver, 0.25, matrix, g, r, a0, a, c);
+  airflownetwork::transport::implicit_euler(solver, 0.25, matrix, g, r, a0, a, c);
   CHECK(c(0) == Approx(0.4));
   CHECK(c(1) == Approx(0.55));
   // Check for mass conservation
