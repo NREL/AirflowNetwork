@@ -461,17 +461,27 @@ where $\mat{A}$ is the diagonal matrix containing the product $\rho V$ for each 
         \If{$\text{link.flow} > 0$}
             \State $T(\text{link}.i, \text{link}.i) \minuseq \text{link.flow}$
             \State $T(\text{link}.j, \text{link}.i) \pluseq \left(1-\eta\right) \text{link.flow}$
-        \Else
+        \Else % NEED TO RECHECK THIS ONE
             \State $T(\text{link}.j, \text{link}.j) \minuseq \text{link.flow}$
             \State $T(\text{link}.i, \text{link}.j) \pluseq \left(1-\eta\right) \text{link.flow}$
         \EndIf
       \Else
-          \State pass
+        \If{$\text{link.flow0} > 0$}
+            \State $T(\text{link}.i, \text{link}.i) \minuseq \text{link.flow0}$
+            \State $T(\text{link}.j, \text{link}.i) \pluseq \left(1-\eta\right) \text{link.flow0}$
+        \EndIf
+        \If{$\text{link.flow1} > 0$} % NEED TO RECHECK THIS ONE
+            \State $T(\text{link}.j, \text{link}.j) \minuseq \text{link.flow1}$
+            \State $T(\text{link}.i, \text{link}.j) \pluseq \left(1-\eta\right) \text{link.flow1}$
+        \EndIf
       \EndIf
     \EndFor
     %\EndProcedure
   \end{algorithmic}
 \end{algorithm}
+
+Note that while the matrix is sparse and can be stored in a skyline storage scheme, it is not symmetric and
+requires non-symmetric storage and solution procedure.
  
 \subsection{Time Advancement}
 To advance the conservation equations through time, there are a number of

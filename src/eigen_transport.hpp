@@ -87,21 +87,22 @@ template <typename S, typename M, typename V> void implicit_euler(S &solver, dou
   solver.compute(matrix);
   // Solve
   G *= h;
-  G += A*C;
+  G += A.cwiseProduct(C);
   C = solver.solve(G);
 }
 
 template <typename S, typename M, typename V> void crank_nicolson(S& solver, double h, M& matrix, V& G0, V& G, V& R0, V& R, V& A0, V& A, V& C)
 {
   h *= 0.5;
-  auto hH = h * (matrix * C - R0.cwiseProduct(C) + G0);
+  V hH = h * (matrix * C - R0.cwiseProduct(C) + G0);
   // Set up
   matrix *= -h;
   matrix += (A + h * R).asDiagonal();
   solver.compute(matrix);
   // Solve
   G *= h;
-  G += A*C + hH;
+  G += A0.cwiseProduct(C);
+  G += hH;
   C = solver.solve(G);
 }
 
