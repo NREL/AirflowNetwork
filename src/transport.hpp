@@ -35,6 +35,7 @@
 #include "filters.hpp"
 
 namespace airflownetwork {
+namespace transport {
 
 template <typename T> class HasCoeffRef
 {
@@ -55,7 +56,7 @@ struct HasCoeffRef : std::false_type {};
 template <typename T>
 struct HasCoeffRef <T, decltype((void)T::coeffRef, 0)> : std::true_type {};
 */
-template <typename L, typename M, typename K> void transport_matrix(const K& key, typename std::enable_if<HasCoeffRef<M>::value, M>::type& matrix, L& links)
+template <typename L, typename M, typename K> void matrix(const K& key, typename std::enable_if<HasCoeffRef<M>::value, M>::type& matrix, L& links)
 {
   for (auto& link : links) {
     // Compute the inefficiency
@@ -92,7 +93,7 @@ template <typename L, typename M, typename K> void transport_matrix(const K& key
   }
 }
 
-template <typename L, typename M, typename K> void transport_matrix(const K& key, M& matrix, L& links)
+template <typename L, typename M, typename K> void matrix(const K& key, M& matrix, L& links)
 {
   for (auto& link : links) {
     // Compute the inefficiency
@@ -149,7 +150,7 @@ struct HasCWiseProduct <T, decltype((void)T::cwiseProduct, 0)> : std::true_type 
 //  C = dt * matrix * C + dt * G + C - dt * R.cwiseProduct(C);
 //}
 
-template <typename M, typename V> void explicit_euler_transport(double dt, M& matrix, V& G, V& R, V& C)
+template <typename M, typename V> void explicit_euler(double dt, M& matrix, V& G, V& R, V& C)
 {
   C = dt * matrix * C + dt * G + C - dt * R.cwiseProduct(C);
 }
@@ -162,7 +163,7 @@ template <typename M, typename V> void explicit_euler_transport(double dt, M& ma
 //  C = dt * matrix * C + G;
 //}
 
-template <typename S, typename M, typename V> void implicit_euler_transport(S &solver, double dt, M& matrix, V& G, V& R, V& C0, V&C)
+template <typename S, typename M, typename V> void implicit_euler(S &solver, double dt, M& matrix, V& G, V& R, V& C0, V&C)
 {
   // RHS
   //C0 += dt * G;
@@ -200,7 +201,7 @@ template <typename S, typename M, typename V> void implicit_euler_transport(doub
   C = dt * matrix * C + G;
 }
 */
-
+}
 }
 
 #endif // !AIRFLOWNETWORK_TRANSPORT_HPP

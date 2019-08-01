@@ -1,0 +1,93 @@
+// Copyright (c) 2019, Alliance for Sustainable Energy, LLC
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// 1. Redistributions of source code must retain the above copyright notice, this
+//    list of conditions and the following disclaimer.
+//
+// 2. Redistributions in binary form must reproduce the above copyright notice,
+//    this list of conditions and the following disclaimer in the documentation
+//    and/or other materials provided with the distribution.
+//
+// 3. Neither the name of the copyright holder nor the names of its
+//    contributors may be used to endorse or promote products derived from
+//    this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+// OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#ifndef AIRFLOWNETWORK_TRANSPORT_HPP
+#define AIRFLOWNETWORK_TRANSPORT_HPP
+
+#include <string>
+#include <vector>
+#include <type_traits>
+#include <iostream>
+#include "filters.hpp"
+
+namespace airflownetwork {
+
+template <typename L, typename M, typename K> void transport_matrix(const K& key, M& matrix, L& links)
+{
+  for (auto& link : links) {
+    // Compute the inefficiency
+    double ineff = 1.0;
+    for (auto& filter : link.filters[key]) {
+      // Expect filters found via a key, get the combined efficiency with a schedule value
+      double eff = filter.efficiency * filter.control;
+      if (eff == 1.0) {
+        // Nothing is going to be transported
+        // link.active = false;
+        goto inactive;
+      }
+      ineff *= (1.0 - eff);
+    }
+    if (link.nf == 1) {
+      if (link.flow > 0.0) {
+        matrix.coeffRef(link.node0.index, link.node0.index) -= link.flow; // This is a diagonal entry
+        matrix.coeffRef(link.node1.index, link.node0.index) += link.flow * ineff;
+      } else if (link.flow < 0) {
+        matrix.coeffRef(link.node0.index, link.node1.index) -= link.flow * ineff;
+        matrix.coeffRef(link.node1.index, link.node1.index) += link.flow; // This is a diagonal entry
+      }
+    } else if (link.nf == 2) { // This is not tested yet
+      if (link.flow0 > 0.0) {
+        matrix.coeffRef(link.node0.index, link.node0.index) -= link.flow0; // This is a diagonal entry
+        matrix.coeffRef(link.node1.index, link.node0.index) += link.flow0 * ineff;
+      }
+      if (link.flow1 > 0.0) {
+        matrix.coeffRef(link.node0.index, link.node1.index) += link.flow1 * ineff;
+        matrix.coeffRef(link.node1.index, link.node1.index) -= link.flow1; // This is a diagonal entry
+      }
+    }
+  inactive:;
+  }
+}
+
+template <typename M, typename V> void explicit_euler_transport(double dt, M& matrix, V& G, V& R, V& A, V& C)
+{
+  C = dt * matrix * C + dt * G + C - dt * R.cwiseProduct(C);
+}
+
+template <typename S, typename M, typename V> void implicit_euler_transport(S &solver, double dt, M& matrix, V& G, V& R, V& A0, V& A, V& C0, V&C)
+{
+  // Set up
+  matrix *= -dt;
+  matrix += (A - dt*R).asDiagonal();
+  solver.compute(matrix);
+  // Solve
+  C = solver.solve(C0 + dt*G);
+}
+
+}
+
+#endif // !AIRFLOWNETWORK_TRANSPORT_HPP

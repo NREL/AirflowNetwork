@@ -8,6 +8,7 @@ set(hdrs properties.hpp
          material.hpp
          model.hpp
          link.hpp
+		 eigen_transport.hpp
          element.hpp
          powerlaw.hpp
          results.hpp
