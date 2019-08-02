@@ -462,8 +462,8 @@ where $\mat{A}$ is the diagonal matrix containing the product $\rho V$ for each 
             \State $T(\text{link}.i, \text{link}.i) \minuseq \text{link.flow}$
             \State $T(\text{link}.j, \text{link}.i) \pluseq \left(1-\eta\right) \text{link.flow}$
         \Else % NEED TO RECHECK THIS ONE
-            \State $T(\text{link}.j, \text{link}.j) \minuseq \text{link.flow}$
-            \State $T(\text{link}.i, \text{link}.j) \pluseq \left(1-\eta\right) \text{link.flow}$
+            \State $T(\text{link}.j, \text{link}.j) \pluseq \text{link.flow}$
+            \State $T(\text{link}.i, \text{link}.j) \minuseq \left(1-\eta\right) \text{link.flow}$
         \EndIf
       \Else
         \If{$\text{link.flow0} > 0$}
